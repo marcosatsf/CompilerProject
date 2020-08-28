@@ -24,7 +24,7 @@ public class MainIDE {
     }
     
     public void startVirtualMachine(){
-        VirtualMachine vm = new VirtualMachine();
+        VirtualMachine vm = VirtualMachine.getInstance();
         vm.setVisible(true);
     }
     

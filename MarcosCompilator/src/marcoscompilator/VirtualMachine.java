@@ -6,11 +6,21 @@
 package marcoscompilator;
 
 import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import javax.swing.JTextArea;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.Document;
 import javax.swing.text.Element;
+import javax.swing.text.DocumentFilter;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
 
 /**
  *
@@ -20,10 +30,19 @@ public class VirtualMachine extends javax.swing.JFrame {
 
     DefaultTableModel model;
     JTextArea lines;
+    Filter filterDocument;
+    InterfaceVmCodigo interfaceVmCodigo;
+    private static VirtualMachine instance = null;
+    
+    public static VirtualMachine getInstance(){
+        if(instance == null) instance = new VirtualMachine();
+        return instance;
+    }
 
     public VirtualMachine() {
         initComponents();
         model = (DefaultTableModel) tableInstrucoes.getModel();
+        interfaceVmCodigo = new InterfaceVmCodigo();
     }
     
     public void addAsmRow(int i, String instrucao){
@@ -223,8 +242,31 @@ public class VirtualMachine extends javax.swing.JFrame {
             }
         });
 
+        
         textTerminal.setColumns(20);
         textTerminal.setRows(5);
+        textTerminal.setText(">");
+        textTerminal.addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if(e.getKeyCode() == KeyEvent.VK_ENTER){
+                    System.out.println("Apertou ae?");
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+        });
+        
+        filterDocument = new Filter();
+        ((AbstractDocument) textTerminal.getDocument()).setDocumentFilter(filterDocument);
         jScrollPane1.setViewportView(textTerminal);
 
         btnRun.setText("jButton1");
@@ -267,6 +309,13 @@ public class VirtualMachine extends javax.swing.JFrame {
         menu.add(mEditar);
 
         mExecutar.setText("Executar");
+        mExecutar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                passVm();
+            }
+        });
+        
         menu.add(mExecutar);
 
         mDebug.setText("Debug");
@@ -363,4 +412,64 @@ public class VirtualMachine extends javax.swing.JFrame {
     private javax.swing.JTable tablePilha;
     private javax.swing.JTextArea textTerminal;
     // End of variables declaration//GEN-END:variables
+    private class Filter extends DocumentFilter {
+        private static final String PROMPT = "> ";
+        
+        private int getPromptPosition(final FilterBypass fb, final int offset){
+            Document doc = fb.getDocument();
+            Element root = doc.getDefaultRootElement();
+            int count = root.getElementCount();
+            int index = root.getElementIndex(offset);
+            Element cur = root.getElement(index);
+            return cur.getStartOffset()+PROMPT.length();
+        }
+        
+        @Override
+        public void insertString(final FilterBypass fb, final int offset, final String string, final AttributeSet attr)
+                throws BadLocationException {
+            if (offset >= getPromptPosition(fb, offset)) {
+                super.insertString(fb, offset, string, attr);
+            }
+        }
+
+        @Override
+        public void remove(final FilterBypass fb, final int offset, final int length) throws BadLocationException {
+            if (offset >= getPromptPosition(fb, offset)) {
+                super.remove(fb, offset, length);
+            }
+        }
+
+        @Override
+        public void replace(final FilterBypass fb, final int offset, final int length, final String text, final AttributeSet attrs)
+                throws BadLocationException {
+            if (offset >= getPromptPosition(fb, offset)) {
+                super.replace(fb, offset, length, text, attrs);
+            }
+        }
+    }
+    
+    public void setTableCom(String str, int line){
+        model.setValueAt(str, line, 4);
+    }
+    
+    public String getTableInstrucoes(int line){
+        return tableInstrucoes.getValueAt(line, 1).toString();
+    }
+    
+    public int getTableParam1(int line){
+        return Integer.parseInt(tableInstrucoes.getValueAt(line, 2).toString());
+    }
+    
+    public int getTableParam2(int line){
+        return Integer.parseInt(tableInstrucoes.getValueAt(line, 3).toString());
+    }
+    
+    private void passVm(){
+        interfaceVmCodigo.run(this);
+    }
+    
+    public void readValue(){
+        textTerminal.append(" Entrada: ");
+    }
+    
 }

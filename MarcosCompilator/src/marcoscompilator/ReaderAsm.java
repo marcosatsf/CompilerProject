@@ -13,12 +13,14 @@ public class ReaderAsm {
     private VirtualMachine vm;
     private ArrayList<IndiceMap> instructionPointer;
     private ArrayList<IndiceMap> completeLabel;
+    private InterfaceVmCodigo interfaceVmCodigo;
     
     public ReaderAsm(String path){
         this.path = path;
-        vm = new VirtualMachine();
+        vm = VirtualMachine.getInstance();
         instructionPointer = new ArrayList<>();
         completeLabel = new ArrayList<>();
+        interfaceVmCodigo = new InterfaceVmCodigo();
         readFile();
     }
     
@@ -41,6 +43,8 @@ public class ReaderAsm {
             }
             
             verifyLabels();
+            
+            interfaceVmCodigo.populateTableCom(vm);
             
             vm.setVisible(true);
         
