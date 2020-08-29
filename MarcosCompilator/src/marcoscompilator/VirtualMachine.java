@@ -11,8 +11,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JTextArea;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -36,7 +39,7 @@ import javax.swing.text.BadLocationException;
  */
 public class VirtualMachine extends javax.swing.JFrame {
 
-    DefaultTableModel model;
+    DefaultTableModel model, modelStack;
     JTextArea lines;
     Filter filterDocument;
     InterfaceVmCodigo interfaceVmCodigo;
@@ -53,6 +56,7 @@ public class VirtualMachine extends javax.swing.JFrame {
     public VirtualMachine() {
         initComponents();
         model = (DefaultTableModel) tableInstrucoes.getModel();
+        modelStack = (DefaultTableModel) tablePilha.getModel();
         interfaceVmCodigo = new InterfaceVmCodigo();
         valorLido = "";
         executando = false;
@@ -88,6 +92,19 @@ public class VirtualMachine extends javax.swing.JFrame {
     
     public int getParam2(int row){
         return (int)model.getValueAt(row - 1, 3);
+    }
+    
+    public void updateStack(ArrayList<Integer> m){
+        for(int pos=0; pos< m.size(); pos++){
+            try{
+                if(modelStack.getValueAt(pos, 1) != m.get(pos)) 
+                    modelStack.setValueAt(m.get(pos), pos, 1);
+                else if(modelStack.getValueAt(pos, 1) == m.get(pos))
+                    continue;
+            }catch(ArrayIndexOutOfBoundsException err){
+               modelStack.addRow(new Object[]{pos, m.get(pos)}); 
+            }                
+        }
     }
     
     /**
@@ -248,7 +265,7 @@ public class VirtualMachine extends javax.swing.JFrame {
 
         pTab.addTab("ASM - VM", tabVM);
 
-        btnNext.setText("jButton1");
+        btnNext.setText("Nxt");
         btnNext.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnNextActionPerformed(evt);
@@ -288,7 +305,7 @@ public class VirtualMachine extends javax.swing.JFrame {
         ((AbstractDocument) textTerminal.getDocument()).setDocumentFilter(filterDocument);
         jScrollPane1.setViewportView(textTerminal);
 
-        btnRun.setText("jButton1");
+        btnRun.setText("Run");
         btnRun.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnRunActionPerformed(evt);
@@ -335,6 +352,7 @@ public class VirtualMachine extends javax.swing.JFrame {
                 if(!executando){
                     System.out.println("Iniciando execucao");
                     executando = true;
+                    
                     runCode();
                 }else{
                     System.out.println("Programa ja executando");
@@ -342,6 +360,7 @@ public class VirtualMachine extends javax.swing.JFrame {
             }
         });
         
+
         menu.add(mExecutar);
 
         mDebug.setText("Debug");
@@ -436,7 +455,7 @@ public class VirtualMachine extends javax.swing.JFrame {
     private class Filter extends DocumentFilter {
         private static final String PROMPT = "";
         
-        private int getPromptPosition(final FilterBypass fb, final int offset){
+        private int getPromptPosition(final DocumentFilter.FilterBypass fb, final int offset){
             Document doc = fb.getDocument();
             Element root = doc.getDefaultRootElement();
             int count = root.getElementCount();
@@ -446,7 +465,7 @@ public class VirtualMachine extends javax.swing.JFrame {
         }
         
         @Override
-        public void insertString(final FilterBypass fb, final int offset, final String string, final AttributeSet attr)
+        public void insertString(final DocumentFilter.FilterBypass fb, final int offset, final String string, final AttributeSet attr)
                 throws BadLocationException {
             if (offset >= getPromptPosition(fb, offset)) {
                 super.insertString(fb, offset, string, attr);
@@ -454,14 +473,14 @@ public class VirtualMachine extends javax.swing.JFrame {
         }
 
         @Override
-        public void remove(final FilterBypass fb, final int offset, final int length) throws BadLocationException {
+        public void remove(final DocumentFilter.FilterBypass fb, final int offset, final int length) throws BadLocationException {
             if (offset >= getPromptPosition(fb, offset)) {
                 super.remove(fb, offset, length);
             }
         }
 
         @Override
-        public void replace(final FilterBypass fb, final int offset, final int length, final String text, final AttributeSet attrs)
+        public void replace(final DocumentFilter.FilterBypass fb, final int offset, final int length, final String text, final AttributeSet attrs)
                 throws BadLocationException {
             if (offset >= getPromptPosition(fb, offset)) {
                 super.replace(fb, offset, length, text, attrs);
