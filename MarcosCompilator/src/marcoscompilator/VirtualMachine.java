@@ -11,9 +11,17 @@ import java.awt.event.ActionListener;
 import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JTextArea;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuKeyEvent;
+import javax.swing.event.MenuKeyListener;
+import javax.swing.event.MenuListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.Document;
@@ -32,6 +40,9 @@ public class VirtualMachine extends javax.swing.JFrame {
     JTextArea lines;
     Filter filterDocument;
     InterfaceVmCodigo interfaceVmCodigo;
+    String valorLido;
+    boolean executando;
+    
     private static VirtualMachine instance = null;
     
     public static VirtualMachine getInstance(){
@@ -43,6 +54,8 @@ public class VirtualMachine extends javax.swing.JFrame {
         initComponents();
         model = (DefaultTableModel) tableInstrucoes.getModel();
         interfaceVmCodigo = new InterfaceVmCodigo();
+        valorLido = "";
+        executando = false;
     }
     
     public void addAsmRow(int i, String instrucao){
@@ -245,24 +258,30 @@ public class VirtualMachine extends javax.swing.JFrame {
         
         textTerminal.setColumns(20);
         textTerminal.setRows(5);
-        textTerminal.setText(">");
+        textTerminal.setText("");
+        textTerminal.setEditable(false);
         textTerminal.addKeyListener(new KeyListener() {
             @Override
-            public void keyTyped(KeyEvent e) {
-                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+            public void keyTyped(KeyEvent e) {}
 
             @Override
             public void keyPressed(KeyEvent e) {
                 if(e.getKeyCode() == KeyEvent.VK_ENTER){
-                    System.out.println("Apertou ae?");
+                    //Regex parsear quando for enter ou espaço =)
+                    valorLido = "";
+                    String[] aux = textTerminal.getText().split("Entrada: |\\r\\n|\\n|\\r");
+                    for (String character : aux) {
+                        valorLido += character;
+                    }
+                    textTerminal.setText("");
+                    textTerminal.setEditable(false);
+                    
+                    returnValueRead();
                 }
             }
 
             @Override
-            public void keyReleased(KeyEvent e) {
-                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+            public void keyReleased(KeyEvent e) {}
         });
         
         filterDocument = new Filter();
@@ -309,10 +328,17 @@ public class VirtualMachine extends javax.swing.JFrame {
         menu.add(mEditar);
 
         mExecutar.setText("Executar");
-        mExecutar.addActionListener(new ActionListener() {
+        
+        mExecutar.addChangeListener(new ChangeListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                passVm();
+            public void stateChanged(ChangeEvent arg0) {
+                if(!executando){
+                    System.out.println("Iniciando execucao");
+                    executando = true;
+                    runCode();
+                }else{
+                    System.out.println("Programa ja executando");
+                }
             }
         });
         
@@ -320,8 +346,9 @@ public class VirtualMachine extends javax.swing.JFrame {
 
         mDebug.setText("Debug");
         menu.add(mDebug);
-
+        
         setJMenuBar(menu);
+        
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -355,15 +382,8 @@ public class VirtualMachine extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_btnRunActionPerformed
 
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
+
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -398,10 +418,10 @@ public class VirtualMachine extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JTextArea textCode;
-    private javax.swing.JMenu mArquivo;
-    private javax.swing.JMenu mDebug;
-    private javax.swing.JMenu mEditar;
-    private javax.swing.JMenu mExecutar;
+    private javax.swing.JMenuItem mArquivo;
+    private javax.swing.JMenuItem mDebug;
+    private javax.swing.JMenuItem mEditar;
+    private javax.swing.JMenuItem mExecutar;
     private javax.swing.JMenuBar menu;
     private javax.swing.JPanel pInstrucoes;
     private javax.swing.JPanel pPilha;
@@ -412,8 +432,9 @@ public class VirtualMachine extends javax.swing.JFrame {
     private javax.swing.JTable tablePilha;
     private javax.swing.JTextArea textTerminal;
     // End of variables declaration//GEN-END:variables
+    
     private class Filter extends DocumentFilter {
-        private static final String PROMPT = "> ";
+        private static final String PROMPT = "";
         
         private int getPromptPosition(final FilterBypass fb, final int offset){
             Document doc = fb.getDocument();
@@ -457,19 +478,34 @@ public class VirtualMachine extends javax.swing.JFrame {
     }
     
     public int getTableParam1(int line){
+        try{
         return Integer.parseInt(tableInstrucoes.getValueAt(line, 2).toString());
+        }catch(NumberFormatException e){
+            System.out.println("Nao tem param 1");
+            return 0;
+        }
     }
     
     public int getTableParam2(int line){
-        return Integer.parseInt(tableInstrucoes.getValueAt(line, 3).toString());
+        try{
+            return Integer.parseInt(tableInstrucoes.getValueAt(line, 3).toString());
+        }catch(NumberFormatException e){
+            System.out.println("Nao tem param 2");
+            return 0;
+        }
     }
     
-    private void passVm(){
+    private void runCode(){
+        System.out.println("runCode");
         interfaceVmCodigo.run(this);
     }
     
     public void readValue(){
-        textTerminal.append(" Entrada: ");
-    }
+        textTerminal.setEditable(true);
+    }   
     
+    private void returnValueRead(){
+        System.out.println("Valor lido: " + valorLido);
+        interfaceVmCodigo.setReturnedValue(this, Integer.parseInt(valorLido));
+    }
 }

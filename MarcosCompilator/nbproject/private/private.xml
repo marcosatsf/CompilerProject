@@ -3,12 +3,10 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/MarcosATSF-DESKTOP/Documents/CompilerProject/MarcosCompilator/src/marcoscompilator/ReaderAsm.java</file>
-            <file>file:/C:/Users/MarcosATSF-DESKTOP/Documents/CompilerProject/MarcosCompilator/src/marcoscompilator/Instrucoes.java</file>
-            <file>file:/C:/Users/MarcosATSF-DESKTOP/Documents/CompilerProject/MarcosCompilator/src/marcoscompilator/StartScreen.java</file>
-            <file>file:/C:/Users/MarcosATSF-DESKTOP/Documents/CompilerProject/MarcosCompilator/src/marcoscompilator/MainIDE.java</file>
-            <file>file:/C:/Users/MarcosATSF-DESKTOP/Documents/CompilerProject/MarcosCompilator/src/marcoscompilator/InterfaceVmCodigo.java</file>
-            <file>file:/C:/Users/MarcosATSF-DESKTOP/Documents/CompilerProject/MarcosCompilator/src/marcoscompilator/VirtualMachine.java</file>
+            <file>file:/C:/Users/Bgmar/OneDrive/Documentos/NetBeansProjects/MarcosCompilator/src/marcoscompilator/MainIDE.java</file>
+            <file>file:/C:/Users/Bgmar/OneDrive/Documentos/NetBeansProjects/MarcosCompilator/src/marcoscompilator/Instrucoes.java</file>
+            <file>file:/C:/Users/Bgmar/OneDrive/Documentos/NetBeansProjects/MarcosCompilator/src/marcoscompilator/InterfaceVmCodigo.java</file>
+            <file>file:/C:/Users/Bgmar/OneDrive/Documentos/NetBeansProjects/MarcosCompilator/src/marcoscompilator/VirtualMachine.java</file>
         </group>
     </open-files>
 </project-private>

@@ -12,6 +12,7 @@ public class Instrucoes {
     public int execute(String comando, int i, int s, ArrayList<Integer> m,
             int param1, int param2)
     {
+        InterfaceVmCodigo.setI(++i);
         switch(comando)
         {
             case "LDC":
@@ -47,7 +48,7 @@ public class Instrucoes {
             case "CMAQ":
                 return CMAQ(s, m);
             case "START":
-                return DEFAULT_VALUE;
+                return START();
             case "HLT":
                 return DEFAULT_VALUE;
             case "STR":
@@ -59,7 +60,7 @@ public class Instrucoes {
             case "NULL":
                 break;
             case "RD":
-                return RD(param1, i, s, m);
+                return RD(param1, s, m);
             case "PRN":
                 return PRN(s);
             case "ALLOC":
@@ -140,8 +141,8 @@ public class Instrucoes {
     
     //LDC k (Carregar constante), S:=s + 1 ; M [s]: = k 
     private int LDC(int p1, int s, ArrayList<Integer> m){
-        s++;
-        m.add(s, p1);
+        InterfaceVmCodigo.setS(++s);
+        m.set(s, p1);
         return DEFAULT_VALUE;
     }
     private String LDCcom(){
@@ -149,8 +150,8 @@ public class Instrucoes {
     }
     //LDV n (Carregar valor), S:=s + 1 ; M[s]:=M[n] 
     private int LDV(int p1, int s, ArrayList<Integer> m){
-        s++;
-        m.add(s, m.get(p1));
+        InterfaceVmCodigo.setS(++s);
+        m.set(s, m.get(p1));
         return DEFAULT_VALUE;
     }
     private String LDVcom(){
@@ -158,8 +159,9 @@ public class Instrucoes {
     }
     //ADD (Somar), M[s-1]:=M[s-1] + M[s]; s:=s - 1
     private int ADD(int s, ArrayList<Integer> m){
-        m.add(s-1, m.get(s-1)+m.get(s));
-        s--;
+        int sum = m.get(s-1) + m.get(s);
+        m.set((s-1), sum);
+        InterfaceVmCodigo.setS(--s);
         return DEFAULT_VALUE;
     }
     private String ADDcom(){
@@ -167,8 +169,8 @@ public class Instrucoes {
     }
     //SUB (Subtrair), M[s-1]:=M[s-1] - M[s]; s:=s - 1
     private int SUB(int s, ArrayList<Integer> m){
-        m.add(s-1, m.get(s-1)-m.get(s));
-        s--;
+        m.set(s-1, m.get(s-1)-m.get(s));
+        InterfaceVmCodigo.setS(--s);
         return DEFAULT_VALUE;
     }
     private String SUBcom(){
@@ -176,8 +178,8 @@ public class Instrucoes {
     }
     //MULT (Multiplicar), M[s-1]:=M[s-1] * M[s]; s:=s - 1
     private int MULT(int s, ArrayList<Integer> m){
-        m.add(s-1, m.get(s-1)*m.get(s));
-        s--;
+        m.set(s-1, m.get(s-1)*m.get(s));
+        InterfaceVmCodigo.setS(--s);
         return DEFAULT_VALUE;
     }
     private String MULTcom(){
@@ -185,8 +187,8 @@ public class Instrucoes {
     }
     //DIVI (Dividir), M[s-1]:=M[s-1] div M[s]; s:=s - 1
     private int DIVI(int s, ArrayList<Integer> m){
-        m.add(s-1, m.get(s-1)/m.get(s));
-        s--;
+        m.set(s-1, m.get(s-1)/m.get(s));
+        InterfaceVmCodigo.setS(--s);
         return DEFAULT_VALUE;
     }
     private String DIVIcom(){
@@ -194,7 +196,7 @@ public class Instrucoes {
     }
     //INV (Inverter sinal), M[s]:= -M[s]
     private int INV(int s, ArrayList<Integer> m){
-        m.add(s, -m.get(s));
+        m.set(s, -m.get(s));
         return DEFAULT_VALUE;
     }
     private String INVcom(){
@@ -204,9 +206,9 @@ public class Instrucoes {
     se M [s-1] = 1 e M[s] = 1 então M[s-1]:=1 senão M[s-1]:=0; s:=s - 1
     */
     private int AND(int s, ArrayList<Integer> m){
-        if(m.get(s-1) == 1 && m.get(s) == 1) m.add(s-1, 1);
-        else m.add(s-1, 0);
-        s--;
+        if(m.get(s-1) == 1 && m.get(s) == 1) m.set(s-1, 1);
+        else m.set(s-1, 0);
+        InterfaceVmCodigo.setS(--s);
         return DEFAULT_VALUE;
     }
     private String ANDcom(){
@@ -216,9 +218,9 @@ public class Instrucoes {
     se M[s-1] = 1 ou M[s] = 1 então M[s-1]:=1 senão M[s-1]:=0; s:=s - 1
     */
     private int OR(int s, ArrayList<Integer> m){
-        if(m.get(s-1) == 1 || m.get(s) == 1) m.add(s-1, 1);
-        else m.add(s-1, 0);
-        s--;
+        if(m.get(s-1) == 1 || m.get(s) == 1) m.set(s-1, 1);
+        else m.set(s-1, 0);
+        InterfaceVmCodigo.setS(--s);
         return DEFAULT_VALUE;
     }
     private String ORcom(){
@@ -226,7 +228,7 @@ public class Instrucoes {
     }
     //NEG (Negação), M[s]:=1 - M[s]
     private int NEG(int s, ArrayList<Integer> m){
-        m.add(s, 1-m.get(s));
+        m.set(s, 1-m.get(s));
         return DEFAULT_VALUE;
     }
     private String NEGcom(){
@@ -236,9 +238,9 @@ public class Instrucoes {
     se M[s-1] < M[s] então M[s-1]:=1 senão M[s-1]:=0; s:=s - 1
     */
     private int CME(int s, ArrayList<Integer> m){
-        if(m.get(s-1) < m.get(s)) m.add(s-1, 1);
-        else m.add(s-1, 0);
-        s--;
+        if(m.get(s-1) < m.get(s)) m.set(s-1, 1);
+        else m.set(s-1, 0);
+        InterfaceVmCodigo.setS(--s);
         return DEFAULT_VALUE;
     }
     private String CMEcom(){
@@ -248,9 +250,9 @@ public class Instrucoes {
     se M[s-1] > M[s] então M[s-1]:=1 senão M[s-1]:=0; s:=s - 1
     */
     private int CMA(int s, ArrayList<Integer> m){
-        if(m.get(s-1) > m.get(s)) m.add(s-1, 1);
-        else m.add(s-1, 0);
-        s--;
+        if(m.get(s-1) > m.get(s)) m.set(s-1, 1);
+        else m.set(s-1, 0);
+        InterfaceVmCodigo.setS(--s);
         return DEFAULT_VALUE;
     }
     private String CMAcom(){
@@ -260,9 +262,9 @@ public class Instrucoes {
     se M[s-1] = M[s] então M[s-1]:=1 senão M[s-1]:=0; s:=s - 1
     */
     private int CEQ(int s, ArrayList<Integer> m){
-        if(m.get(s-1) == m.get(s)) m.add(s-1, 1);
-        else m.add(s-1, 0);
-        s--;
+        if(m.get(s-1) == m.get(s)) m.set(s-1, 1);
+        else m.set(s-1, 0);
+        InterfaceVmCodigo.setS(--s);
         return DEFAULT_VALUE;
     }
     private String CEQcom(){
@@ -272,9 +274,9 @@ public class Instrucoes {
     se M[s-1] ≠ M[s] então M[s-1]:=1 senão M[s-1]:=0; s:=s - 1
     */
     private int CDIF(int s, ArrayList<Integer> m){
-        if(m.get(s-1) != m.get(s)) m.add(s-1, 1);
-        else m.add(s-1, 0);
-        s--;
+        if(m.get(s-1) != m.get(s)) m.set(s-1, 1);
+        else m.set(s-1, 0);
+        InterfaceVmCodigo.setS(--s);
         return DEFAULT_VALUE;
     }
     private String CDIFcom(){
@@ -284,9 +286,9 @@ public class Instrucoes {
     se M[s-1] ≤ M[s] então M[s-1]:=1 senão M[s-1]:=0; s:=s - 1
     */
     private int CMEQ(int s, ArrayList<Integer> m){
-        if(m.get(s-1) <= m.get(s)) m.add(s-1, 1);
-        else m.add(s-1, 0);
-        s--;
+        if(m.get(s-1) <= m.get(s)) m.set(s-1, 1);
+        else m.set(s-1, 0);
+        InterfaceVmCodigo.setS(--s);
         return DEFAULT_VALUE;
     }
     private String CMEQcom(){
@@ -296,15 +298,19 @@ public class Instrucoes {
     se M[s-1] ≥ M[s] então M[s-1]:=1 senão M[s-1]:=0; s:=s - 1
     */
     private int CMAQ(int s, ArrayList<Integer> m){
-        if(m.get(s-1) >= m.get(s)) m.add(s-1, 1);
-        else m.add(s-1, 0);
-        s--;
+        if(m.get(s-1) >= m.get(s)) m.set(s-1, 1);
+        else m.set(s-1, 0);
+        InterfaceVmCodigo.setS(--s);
         return DEFAULT_VALUE;
     }
     private String CMAQcom(){
         return "se M[s-1] ≥ M[s] então M[s-1]:=1 senão M[s-1]:=0; s:=s - 1";
     }
     //START (Iniciar programa principal), S:=-1
+    private int START(){
+        InterfaceVmCodigo.setS(-1);
+        return DEFAULT_VALUE;
+    }
     private String STARTcom(){
         return "(Iniciar programa principal), S:=-1";
     }
@@ -316,8 +322,8 @@ public class Instrucoes {
     //
     //STR n (Armazenar valor), M[n]:=M[s]; s:=s-1
     private int STR(int p1, int s, ArrayList<Integer> m){
-        m.add(p1, m.get(s));
-        s--;
+        m.set(p1, m.get(s));
+        InterfaceVmCodigo.setS(--s);
         return DEFAULT_VALUE;
     }
     private String STRcom(){
@@ -326,7 +332,7 @@ public class Instrucoes {
     //Desvios (não há o incremento implícito sobre i)
     //JMP t (Desviar sempre), i:= t
     private int JMP(int p1, int i){
-        i = p1;
+        InterfaceVmCodigo.setI(p1);
         return DEFAULT_VALUE;
     }
     private String JMPcom(){
@@ -336,9 +342,9 @@ public class Instrucoes {
     se M[s] = 0 então i:=t senão i:=i + 1; s:=s-1
     */
     private int JMPF(int p1, int i, int s, ArrayList<Integer> m){
-        if(m.get(s) == 0) i = p1;
-        else i++;
-        s--;
+        if(m.get(s) == 0) 
+            InterfaceVmCodigo.setI(p1);
+        InterfaceVmCodigo.setS(--s);
         return DEFAULT_VALUE;
     }
     private String JMPFcom(){
@@ -352,10 +358,10 @@ public class Instrucoes {
     /*RD (Leitura):
     S:=s + 1; M[s]:= “próximo valor de entrada”.
     */
-    private int RD(int p1, int i, int s, ArrayList<Integer> m){
-        s++;
+    private int RD(int p1, int s, ArrayList<Integer> m){
+        InterfaceVmCodigo.setS(++s);
         return READ_VALUE;
-        //TODO m.add(s, );
+        //TODO m.set(s, );
     }
     private String RDcom(){
         return "S:=s + 1; M[s]:= “próximo valor de entrada”.";
@@ -363,9 +369,8 @@ public class Instrucoes {
     //Saída
     //PRN (Impressão), “Imprimir M[s]”; s:=s-1
     private int PRN(int s){
-        s--;
         return PRINT_VALUE;
-        //TODO m.add(s, );
+        //TODO m.set(s, );
     }
     private String PRNcom(){
         return "“Imprimir M[s]”; s:=s-1";
@@ -374,11 +379,11 @@ public class Instrucoes {
     /*ALLOC m,n (Alocar memória)
     Para k:=0 até n-1 faça
     {s:=s + 1; M[s]:=M[m+k]}
-    */
+    *///TODO popular o m com lixoooooooooooooooooooo
     private int ALLOC(int p1, int p2, int s, ArrayList<Integer> m){
         for(int k = 0; k < p2; k++){
-            s++;
-            m.add(s, m.get(p1+k));
+            InterfaceVmCodigo.setS(++s);
+            m.set(s, m.get(p1+k));
         }
         return DEFAULT_VALUE;
     }
@@ -391,8 +396,8 @@ public class Instrucoes {
     */
     private int DALLOC(int p1, int p2, int s, ArrayList<Integer> m){
         for(int k = p2-1; k >= 0; k--){
-            m.add(p1+k, m.get(s));
-            s--;
+            m.set(p1+k, m.get(s));
+            InterfaceVmCodigo.setS(--s);
         }
         return DEFAULT_VALUE;
     }
@@ -402,9 +407,9 @@ public class Instrucoes {
     //Chamada de Rotina
     //CALL t (Chamar procedimento ou função), S:=s + 1; M[s]:=i + 1; i:=t
     private int CALL(int p1, int i, int s, ArrayList<Integer> m){
-        s++;
-        m.add(s, i+1);
-        i = p1;
+        InterfaceVmCodigo.setS(++s);
+        m.set(s, i);
+        InterfaceVmCodigo.setI(p1);
         return DEFAULT_VALUE;
     }
     private String CALLcom(){
@@ -412,8 +417,8 @@ public class Instrucoes {
     }
     //RETURN (Retornar de procedimento), i:=M[s]; s:=s - 1
     private int RETURN(int i, int s, ArrayList<Integer> m){
-        i = m.get(s);
-        s--;
+        InterfaceVmCodigo.setI(m.get(s));
+        InterfaceVmCodigo.setS(--s);
         return DEFAULT_VALUE;
     }
     private String RETURNcom(){
