@@ -11,7 +11,6 @@ public class Instrucoes {
 
     public int execute(String comando, int i, int s, ArrayList<Integer> m,
             int param1, int param2) {
-        InterfaceVmCodigo.setI(++i);
         switch (comando) {
             case "LDC":
                 return LDC(param1, s, m);
@@ -134,11 +133,17 @@ public class Instrucoes {
         }
         return "";
     }
+    
+    private void secureSet(int value, int s, ArrayList<Integer> m){
+        if(m.size() <= s) m.add(value);
+        else m.set(s, value);
+    }
 
     //LDC k (Carregar constante), S:=s + 1 ; M [s]: = k 
     private int LDC(int p1, int s, ArrayList<Integer> m) {
-        InterfaceVmCodigo.setS(++s);
-        m.set(s, p1);
+        InterfaceVmCodigo.setS(s+1);
+        secureSet(p1, s, m);
+        //m.set(s, p1);
         return DEFAULT_VALUE;
     }
 
@@ -148,8 +153,9 @@ public class Instrucoes {
 
     //LDV n (Carregar valor), S:=s + 1 ; M[s]:=M[n] 
     private int LDV(int p1, int s, ArrayList<Integer> m) {
-        InterfaceVmCodigo.setS(++s);
-        m.set(s, m.get(p1));
+        InterfaceVmCodigo.setS(s+1);
+        secureSet(m.get(p1), s, m);
+        //m.set(s, m.get(p1));
         return DEFAULT_VALUE;
     }
 
@@ -160,8 +166,9 @@ public class Instrucoes {
     //ADD (Somar), M[s-1]:=M[s-1] + M[s]; s:=s - 1
     private int ADD(int s, ArrayList<Integer> m) {
         int sum = m.get(s - 1) + m.get(s);
-        m.set((s - 1), sum);
-        InterfaceVmCodigo.setS(--s);
+        secureSet(sum, s-1, m);
+        //m.set((s - 1), sum);
+        InterfaceVmCodigo.setS(s-1);
         return DEFAULT_VALUE;
     }
 
@@ -171,8 +178,9 @@ public class Instrucoes {
 
     //SUB (Subtrair), M[s-1]:=M[s-1] - M[s]; s:=s - 1
     private int SUB(int s, ArrayList<Integer> m) {
-        m.set(s - 1, m.get(s - 1) - m.get(s));
-        InterfaceVmCodigo.setS(--s);
+        secureSet(m.get(s - 1) - m.get(s), s-1, m);
+        //m.set(s - 1, m.get(s - 1) - m.get(s));
+        InterfaceVmCodigo.setS(s-1);
         return DEFAULT_VALUE;
     }
 
@@ -182,8 +190,9 @@ public class Instrucoes {
 
     //MULT (Multiplicar), M[s-1]:=M[s-1] * M[s]; s:=s - 1
     private int MULT(int s, ArrayList<Integer> m) {
-        m.set(s - 1, m.get(s - 1) * m.get(s));
-        InterfaceVmCodigo.setS(--s);
+        secureSet(m.get(s - 1) * m.get(s), s-1, m);
+        //m.set(s - 1, m.get(s - 1) * m.get(s));
+        InterfaceVmCodigo.setS(s-1);
         return DEFAULT_VALUE;
     }
 
@@ -193,8 +202,9 @@ public class Instrucoes {
 
     //DIVI (Dividir), M[s-1]:=M[s-1] div M[s]; s:=s - 1
     private int DIVI(int s, ArrayList<Integer> m) {
-        m.set(s - 1, m.get(s - 1) / m.get(s));
-        InterfaceVmCodigo.setS(--s);
+        secureSet(m.get(s - 1) / m.get(s), s-1, m);
+        //m.set(s - 1, m.get(s - 1) / m.get(s));
+        InterfaceVmCodigo.setS(s-1);
         return DEFAULT_VALUE;
     }
 
@@ -204,7 +214,8 @@ public class Instrucoes {
 
     //INV (Inverter sinal), M[s]:= -M[s]
     private int INV(int s, ArrayList<Integer> m) {
-        m.set(s, -m.get(s));
+        secureSet(-m.get(s), s, m);
+        //m.set(s, -m.get(s));
         return DEFAULT_VALUE;
     }
 
@@ -216,12 +227,11 @@ public class Instrucoes {
     se M [s-1] = 1 e M[s] = 1 então M[s-1]:=1 senão M[s-1]:=0; s:=s - 1
      */
     private int AND(int s, ArrayList<Integer> m) {
-        if (m.get(s - 1) == 1 && m.get(s) == 1) {
-            m.set(s - 1, 1);
-        } else {
-            m.set(s - 1, 0);
-        }
-        InterfaceVmCodigo.setS(--s);
+        if (m.get(s - 1) == 1 && m.get(s) == 1) secureSet(1, s-1, m);
+            //m.set(s - 1, 1);
+        else secureSet(0, s-1, m);
+            //m.set(s - 1, 0);
+        InterfaceVmCodigo.setS(s-1);
         return DEFAULT_VALUE;
     }
 
@@ -233,12 +243,11 @@ public class Instrucoes {
     se M[s-1] = 1 ou M[s] = 1 então M[s-1]:=1 senão M[s-1]:=0; s:=s - 1
      */
     private int OR(int s, ArrayList<Integer> m) {
-        if (m.get(s - 1) == 1 || m.get(s) == 1) {
-            m.set(s - 1, 1);
-        } else {
-            m.set(s - 1, 0);
-        }
-        InterfaceVmCodigo.setS(--s);
+        if (m.get(s - 1) == 1 || m.get(s) == 1) secureSet(1, s-1, m);
+            //m.set(s - 1, 1);
+        else secureSet(0, s-1, m);
+            //m.set(s - 1, 0);
+        InterfaceVmCodigo.setS(s-1);
         return DEFAULT_VALUE;
     }
 
@@ -248,7 +257,8 @@ public class Instrucoes {
 
     //NEG (Negação), M[s]:=1 - M[s]
     private int NEG(int s, ArrayList<Integer> m) {
-        m.set(s, 1 - m.get(s));
+        secureSet(1 - m.get(s), s, m);
+        //m.set(s, 1 - m.get(s));
         return DEFAULT_VALUE;
     }
 
@@ -260,12 +270,11 @@ public class Instrucoes {
     se M[s-1] < M[s] então M[s-1]:=1 senão M[s-1]:=0; s:=s - 1
      */
     private int CME(int s, ArrayList<Integer> m) {
-        if (m.get(s - 1) < m.get(s)) {
-            m.set(s - 1, 1);
-        } else {
-            m.set(s - 1, 0);
-        }
-        InterfaceVmCodigo.setS(--s);
+        if (m.get(s - 1) < m.get(s)) secureSet(1, s - 1, m);
+            //m.set(s - 1, 1);
+        else secureSet(0, s - 1, m);
+            //m.set(s - 1, 0);
+        InterfaceVmCodigo.setS(s-1);
         return DEFAULT_VALUE;
     }
 
@@ -277,12 +286,11 @@ public class Instrucoes {
     se M[s-1] > M[s] então M[s-1]:=1 senão M[s-1]:=0; s:=s - 1
      */
     private int CMA(int s, ArrayList<Integer> m) {
-        if (m.get(s - 1) > m.get(s)) {
-            m.set(s - 1, 1);
-        } else {
-            m.set(s - 1, 0);
-        }
-        InterfaceVmCodigo.setS(--s);
+        if (m.get(s - 1) > m.get(s)) secureSet(1, s - 1, m);
+            //m.set(s - 1, 1);
+        else secureSet(0, s - 1, m);
+            //m.set(s - 1, 0);
+        InterfaceVmCodigo.setS(s-1);
         return DEFAULT_VALUE;
     }
 
@@ -294,12 +302,11 @@ public class Instrucoes {
     se M[s-1] = M[s] então M[s-1]:=1 senão M[s-1]:=0; s:=s - 1
      */
     private int CEQ(int s, ArrayList<Integer> m) {
-        if (m.get(s - 1) == m.get(s)) {
-            m.set(s - 1, 1);
-        } else {
-            m.set(s - 1, 0);
-        }
-        InterfaceVmCodigo.setS(--s);
+        if (m.get(s - 1) == m.get(s)) secureSet(1, s - 1, m);
+            //m.set(s - 1, 1);
+        else secureSet(0, s - 1, m);
+            //m.set(s - 1, 0);
+        InterfaceVmCodigo.setS(s-1);
         return DEFAULT_VALUE;
     }
 
@@ -311,12 +318,11 @@ public class Instrucoes {
     se M[s-1] ≠ M[s] então M[s-1]:=1 senão M[s-1]:=0; s:=s - 1
      */
     private int CDIF(int s, ArrayList<Integer> m) {
-        if (m.get(s - 1) != m.get(s)) {
-            m.set(s - 1, 1);
-        } else {
-            m.set(s - 1, 0);
-        }
-        InterfaceVmCodigo.setS(--s);
+        if (m.get(s - 1) != m.get(s)) secureSet(1, s - 1, m);
+            //m.set(s - 1, 1);
+        else secureSet(0, s - 1, m);
+            //m.set(s - 1, 0);
+        InterfaceVmCodigo.setS(s-1);
         return DEFAULT_VALUE;
     }
 
@@ -328,12 +334,11 @@ public class Instrucoes {
     se M[s-1] ≤ M[s] então M[s-1]:=1 senão M[s-1]:=0; s:=s - 1
      */
     private int CMEQ(int s, ArrayList<Integer> m) {
-        if (m.get(s - 1) <= m.get(s)) {
-            m.set(s - 1, 1);
-        } else {
-            m.set(s - 1, 0);
-        }
-        InterfaceVmCodigo.setS(--s);
+        if (m.get(s - 1) <= m.get(s)) secureSet(1, s - 1, m);
+            //m.set(s - 1, 1);
+        else secureSet(0, s - 1, m);
+            //m.set(s - 1, 0);
+        InterfaceVmCodigo.setS(s-1);
         return DEFAULT_VALUE;
     }
 
@@ -345,12 +350,11 @@ public class Instrucoes {
     se M[s-1] ≥ M[s] então M[s-1]:=1 senão M[s-1]:=0; s:=s - 1
      */
     private int CMAQ(int s, ArrayList<Integer> m) {
-        if (m.get(s - 1) >= m.get(s)) {
-            m.set(s - 1, 1);
-        } else {
-            m.set(s - 1, 0);
-        }
-        InterfaceVmCodigo.setS(--s);
+        if (m.get(s - 1) >= m.get(s)) secureSet(1, s - 1, m);
+            //m.set(s - 1, 1);
+        else secureSet(0, s - 1, m);
+            //m.set(s - 1, 0);
+        InterfaceVmCodigo.setS(s-1);
         return DEFAULT_VALUE;
     }
 
@@ -377,8 +381,9 @@ public class Instrucoes {
     //
     //STR n (Armazenar valor), M[n]:=M[s]; s:=s-1
     private int STR(int p1, int s, ArrayList<Integer> m) {
-        m.set(p1, m.get(s));
-        InterfaceVmCodigo.setS(--s);
+        secureSet(m.get(s), p1, m);
+        //m.set(p1, m.get(s));
+        InterfaceVmCodigo.setS(s-1);
         return DEFAULT_VALUE;
     }
 
@@ -404,7 +409,7 @@ public class Instrucoes {
         if (m.get(s) == 0) {
             InterfaceVmCodigo.setI(p1);
         }
-        InterfaceVmCodigo.setS(--s);
+        InterfaceVmCodigo.setS(s-1);
         return DEFAULT_VALUE;
     }
 
@@ -420,7 +425,7 @@ public class Instrucoes {
     S:=s + 1; M[s]:= “próximo valor de entrada”.
      */
     private int RD(int p1, int s, ArrayList<Integer> m) {
-        InterfaceVmCodigo.setS(++s);
+        InterfaceVmCodigo.setS(s+1);
         return READ_VALUE;
         //TODO m.set(s, );
     }
@@ -447,12 +452,15 @@ public class Instrucoes {
      *///TODO popular o m com lixoooooooooooooooooooo
     private int ALLOC(int p1, int p2, int s, ArrayList<Integer> m) {
         for (int k = 0; k < p2; k++) {
-            InterfaceVmCodigo.setS(++s);
+            InterfaceVmCodigo.setS(s+1);
             if (m.size() <= p1 + k)
-                m.add(p1 + k, Instrucoes.randomMemValue());
+                secureSet(Instrucoes.randomMemValue(), p1 + k, m);
+                //m.add(p1 + k, Instrucoes.randomMemValue());
             if(s-1 == p1 + k)
-                m.add(s, Instrucoes.randomMemValue());
-            m.set(s, m.get(p1 + k));
+                secureSet(Instrucoes.randomMemValue(), s, m);
+                //m.add(s, Instrucoes.randomMemValue());
+            secureSet(m.get(p1 + k), s, m);
+            //m.set(s, m.get(p1 + k));
         }
         return DEFAULT_VALUE;
     }
@@ -467,8 +475,9 @@ public class Instrucoes {
      */
     private int DALLOC(int p1, int p2, int s, ArrayList<Integer> m) {
         for (int k = p2 - 1; k >= 0; k--) {
-            m.set(p1 + k, m.get(s));
-            InterfaceVmCodigo.setS(--s);
+            secureSet(m.get(s), p1 + k, m);
+            //m.set(p1 + k, m.get(s));
+            InterfaceVmCodigo.setS(s-1);
         }
         return DEFAULT_VALUE;
     }
@@ -480,8 +489,9 @@ public class Instrucoes {
     //Chamada de Rotina
     //CALL t (Chamar procedimento ou função), S:=s + 1; M[s]:=i + 1; i:=t
     private int CALL(int p1, int i, int s, ArrayList<Integer> m) {
-        InterfaceVmCodigo.setS(++s);
-        m.set(s, i);
+        InterfaceVmCodigo.setS(s+1);
+        secureSet(i+1, s, m);
+        //m.set(s, i+1);
         InterfaceVmCodigo.setI(p1);
         return DEFAULT_VALUE;
     }
@@ -493,7 +503,7 @@ public class Instrucoes {
     //RETURN (Retornar de procedimento), i:=M[s]; s:=s - 1
     private int RETURN(int i, int s, ArrayList<Integer> m) {
         InterfaceVmCodigo.setI(m.get(s));
-        InterfaceVmCodigo.setS(--s);
+        InterfaceVmCodigo.setS(s-1);
         return DEFAULT_VALUE;
     }
 

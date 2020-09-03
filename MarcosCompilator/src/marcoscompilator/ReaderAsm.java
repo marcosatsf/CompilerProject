@@ -32,7 +32,7 @@ public class ReaderAsm {
             String data;
             String[] splitted;
 
-            int i = 1;
+            int i = 0;
 
             while (myReader.hasNextLine()) {
                 data = myReader.nextLine();

@@ -21,6 +21,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuKeyEvent;
 import javax.swing.event.MenuKeyListener;
@@ -39,12 +41,20 @@ import javax.swing.text.BadLocationException;
  */
 public class VirtualMachine extends javax.swing.JFrame {
 
+    public static final int SLEEPING = 0;
+    public static final int RUN = 1;
+    public static final int RUN_DEBUG = 2;
+    
     DefaultTableModel model, modelStack;
     JTextArea lines;
     Filter filterDocument;
     InterfaceVmCodigo interfaceVmCodigo;
     String valorLido;
     boolean executando;
+    boolean executandoDebug;
+    boolean nextInstruction;
+    int stopInstruction;
+    public static int state;
     
     private static VirtualMachine instance = null;
     
@@ -57,9 +67,12 @@ public class VirtualMachine extends javax.swing.JFrame {
         initComponents();
         model = (DefaultTableModel) tableInstrucoes.getModel();
         modelStack = (DefaultTableModel) tablePilha.getModel();
-        interfaceVmCodigo = new InterfaceVmCodigo();
         valorLido = "";
+        stopInstruction = -1;
         executando = false;
+        executandoDebug = false;
+        nextInstruction = false;
+        state = SLEEPING;
     }
     
     public void addAsmRow(int i, String instrucao){
@@ -133,9 +146,10 @@ public class VirtualMachine extends javax.swing.JFrame {
         btnRun = new javax.swing.JButton();
         menu = new javax.swing.JMenuBar();
         mArquivo = new javax.swing.JMenu();
-        mEditar = new javax.swing.JMenu();
+        mReset = new javax.swing.JMenu();
         mExecutar = new javax.swing.JMenu();
         mDebug = new javax.swing.JMenu();
+        mStatus = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -172,6 +186,14 @@ public class VirtualMachine extends javax.swing.JFrame {
         tableInstrucoes.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_LAST_COLUMN);
         tableInstrucoes.setMinimumSize(new java.awt.Dimension(390, 64));
         jScrollPane3.setViewportView(tableInstrucoes);
+        tableInstrucoes.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                System.out.println(tableInstrucoes.getValueAt(tableInstrucoes.getSelectedRow(), 0).toString());
+                stopInstruction = Integer.parseInt(tableInstrucoes.getValueAt(tableInstrucoes.getSelectedRow(), 0).toString())-1;
+                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+        });
         if (tableInstrucoes.getColumnModel().getColumnCount() > 0) {
             tableInstrucoes.getColumnModel().getColumn(0).setResizable(false);
             tableInstrucoes.getColumnModel().getColumn(0).setPreferredWidth(20);
@@ -271,6 +293,7 @@ public class VirtualMachine extends javax.swing.JFrame {
                 btnNextActionPerformed(evt);
             }
         });
+        btnNext.setEnabled(false);
 
         
         textTerminal.setColumns(20);
@@ -311,6 +334,7 @@ public class VirtualMachine extends javax.swing.JFrame {
                 btnRunActionPerformed(evt);
             }
         });
+        btnRun.setEnabled(false);
 
         javax.swing.GroupLayout pTerminalLayout = new javax.swing.GroupLayout(pTerminal);
         pTerminal.setLayout(pTerminalLayout);
@@ -341,30 +365,47 @@ public class VirtualMachine extends javax.swing.JFrame {
         mArquivo.setText("Arquivo");
         menu.add(mArquivo);
 
-        mEditar.setText("Editar");
-        menu.add(mEditar);
+        mReset.setText("Reiniciar");
+        //TODO reset program execution
+        menu.add(mReset);
 
         mExecutar.setText("Executar");
-        
         mExecutar.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent arg0) {
                 if(!executando){
                     System.out.println("Iniciando execucao");
                     executando = true;
+                    mDebug.setEnabled(false);
                     
-                    runCode();
+                    runCode(RUN);
                 }else{
                     System.out.println("Programa ja executando");
                 }
             }
         });
-        
-
         menu.add(mExecutar);
 
+        
         mDebug.setText("Debug");
+        mDebug.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent arg0) {
+                if(!executandoDebug){
+                    System.out.println("Iniciando execucao");
+                    executandoDebug = true;
+                    mExecutar.setEnabled(false);
+                    
+                    runCode(RUN_DEBUG);
+                }else{
+                    System.out.println("Programa ja executandoDebug");
+                }
+            }
+        });
         menu.add(mDebug);
+        
+        mStatus.setText("");
+        menu.add(mStatus);
         
         setJMenuBar(menu);
         
@@ -394,10 +435,16 @@ public class VirtualMachine extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
+        btnNext.setEnabled(false);
+        InterfaceVmCodigo.setNxtInst(true);
+        interfaceVmCodigo.runDebug(this, stopInstruction);
         // TODO add your handling code here:
     }//GEN-LAST:event_btnNextActionPerformed
 
     private void btnRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRunActionPerformed
+        btnRun.setEnabled(false);
+        InterfaceVmCodigo.setNxtInst(false);
+        interfaceVmCodigo.run(this);
         // TODO add your handling code here:
     }//GEN-LAST:event_btnRunActionPerformed
 
@@ -439,8 +486,9 @@ public class VirtualMachine extends javax.swing.JFrame {
     private javax.swing.JTextArea textCode;
     private javax.swing.JMenuItem mArquivo;
     private javax.swing.JMenuItem mDebug;
-    private javax.swing.JMenuItem mEditar;
+    private javax.swing.JMenuItem mReset;
     private javax.swing.JMenuItem mExecutar;
+    private javax.swing.JMenuItem mStatus;
     private javax.swing.JMenuBar menu;
     private javax.swing.JPanel pInstrucoes;
     private javax.swing.JPanel pPilha;
@@ -514,17 +562,52 @@ public class VirtualMachine extends javax.swing.JFrame {
         }
     }
     
-    private void runCode(){
-        System.out.println("runCode");
-        interfaceVmCodigo.run(this);
+    private void runCode(int state){
+        interfaceVmCodigo = new InterfaceVmCodigo();
+        this.state = state;
+        if(this.state == RUN){
+            System.out.println("runCode");
+            interfaceVmCodigo.run(this);
+        }
+        if(this.state == RUN_DEBUG){
+            System.out.println("runCodeDebug");
+            InterfaceVmCodigo.setNxtInst(false);
+            interfaceVmCodigo.runDebug(this, stopInstruction);
+        }  
     }
     
     public void readValue(){
+        mStatus.setForeground(Color.GREEN);
+        mStatus.setText("Line "+(InterfaceVmCodigo.getI()));
         textTerminal.setEditable(true);
-    }   
+    }
     
     private void returnValueRead(){
-        System.out.println("Valor lido: " + valorLido);
-        interfaceVmCodigo.setReturnedValue(this, Integer.parseInt(valorLido));
+        if (this.state == RUN) {
+            System.out.println("Valor lido: " + valorLido);
+            interfaceVmCodigo.setReturnedValue(this, Integer.parseInt(valorLido));
+        }
+        if(this.state == RUN_DEBUG){
+            System.out.println("Valor lido: " + valorLido);
+            interfaceVmCodigo.setReturnedValue(this, Integer.parseInt(valorLido), stopInstruction);
+        }  
+    }
+    
+    public void finishExecution(){
+        if(this.state == RUN){
+            mDebug.setEnabled(true);
+        }
+        if(this.state == RUN_DEBUG){
+            mExecutar.setEnabled(true);
+        }
+        mStatus.setText("");
+    }
+    
+    public void interruption(){
+        stopInstruction = -1;
+        mStatus.setForeground(Color.GREEN);
+        mStatus.setText("Line "+(InterfaceVmCodigo.getI()));
+        btnNext.setEnabled(true);
+        btnRun.setEnabled(true);
     }
 }
