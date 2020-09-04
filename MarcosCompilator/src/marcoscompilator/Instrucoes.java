@@ -8,6 +8,7 @@ public class Instrucoes {
     public static final int READ_VALUE = 1;
     public static final int PRINT_VALUE = 2;
     public static final int ERROR_VALUE = -1;
+    public static final int MOVE_I = 3;
 
     public int execute(String comando, int i, int s, ArrayList<Integer> m,
             int param1, int param2) {
@@ -133,15 +134,16 @@ public class Instrucoes {
         }
         return "";
     }
-    
-    private void secureSet(int value, int s, ArrayList<Integer> m){
-        if(m.size() <= s) m.add(value);
-        else m.set(s, value);
-    }
+
+    	 private void secureSet(int value, int s, ArrayList<Integer> m){
+			if(m.size() <= s) m.add(value);
+			else m.set(s, value);
+	}
 
     //LDC k (Carregar constante), S:=s + 1 ; M [s]: = k 
     private int LDC(int p1, int s, ArrayList<Integer> m) {
-        InterfaceVmCodigo.setS(s+1);
+        s = s + 1;
+		InterfaceVmCodigo.setS(s);
         secureSet(p1, s, m);
         //m.set(s, p1);
         return DEFAULT_VALUE;
@@ -153,7 +155,8 @@ public class Instrucoes {
 
     //LDV n (Carregar valor), S:=s + 1 ; M[s]:=M[n] 
     private int LDV(int p1, int s, ArrayList<Integer> m) {
-        InterfaceVmCodigo.setS(s+1);
+        s = s+1;
+		InterfaceVmCodigo.setS(s);
         secureSet(m.get(p1), s, m);
         //m.set(s, m.get(p1));
         return DEFAULT_VALUE;
@@ -395,7 +398,7 @@ public class Instrucoes {
     //JMP t (Desviar sempre), i:= t
     private int JMP(int p1) {
         InterfaceVmCodigo.setI(p1);
-        return DEFAULT_VALUE;
+        return MOVE_I;
     }
 
     private String JMPcom() {
@@ -410,7 +413,7 @@ public class Instrucoes {
             InterfaceVmCodigo.setI(p1);
         }
         InterfaceVmCodigo.setS(s-1);
-        return DEFAULT_VALUE;
+        return MOVE_I;
     }
 
     private String JMPFcom() {
@@ -452,15 +455,13 @@ public class Instrucoes {
      *///TODO popular o m com lixoooooooooooooooooooo
     private int ALLOC(int p1, int p2, int s, ArrayList<Integer> m) {
         for (int k = 0; k < p2; k++) {
-            InterfaceVmCodigo.setS(s+1);
+			s = s+1;
+            InterfaceVmCodigo.setS(s);
+			
             if (m.size() <= p1 + k)
                 secureSet(Instrucoes.randomMemValue(), p1 + k, m);
-                //m.add(p1 + k, Instrucoes.randomMemValue());
-            if(s-1 == p1 + k)
-                secureSet(Instrucoes.randomMemValue(), s, m);
-                //m.add(s, Instrucoes.randomMemValue());
-            secureSet(m.get(p1 + k), s, m);
-            //m.set(s, m.get(p1 + k));
+			else
+				secureSet(m.get(p1+k), s, m);
         }
         return DEFAULT_VALUE;
     }
@@ -477,7 +478,8 @@ public class Instrucoes {
         for (int k = p2 - 1; k >= 0; k--) {
             secureSet(m.get(s), p1 + k, m);
             //m.set(p1 + k, m.get(s));
-            InterfaceVmCodigo.setS(s-1);
+			s = s-1;
+            InterfaceVmCodigo.setS(s);
         }
         return DEFAULT_VALUE;
     }
@@ -489,11 +491,11 @@ public class Instrucoes {
     //Chamada de Rotina
     //CALL t (Chamar procedimento ou função), S:=s + 1; M[s]:=i + 1; i:=t
     private int CALL(int p1, int i, int s, ArrayList<Integer> m) {
-        InterfaceVmCodigo.setS(s+1);
+        s = s+1;
+		InterfaceVmCodigo.setS(s);
         secureSet(i+1, s, m);
-        //m.set(s, i+1);
         InterfaceVmCodigo.setI(p1);
-        return DEFAULT_VALUE;
+        return MOVE_I;
     }
 
     private String CALLcom() {
@@ -504,7 +506,7 @@ public class Instrucoes {
     private int RETURN(int i, int s, ArrayList<Integer> m) {
         InterfaceVmCodigo.setI(m.get(s));
         InterfaceVmCodigo.setS(s-1);
-        return DEFAULT_VALUE;
+        return MOVE_I;
     }
 
     private String RETURNcom() {

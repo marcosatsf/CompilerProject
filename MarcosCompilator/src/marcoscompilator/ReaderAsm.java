@@ -57,7 +57,7 @@ public class ReaderAsm {
         for (IndiceMap label : completeLabel) {           //JMP/JMPF/CALL e a label que eles pulam
             for (IndiceMap cod : instructionPointer) {    //Label e a linha que ela ta 
                 if (label.getLabel().equals(cod.getLabel())) {
-                    vm.editJmpValue(cod.getLinha(), label.getLinha());
+                    vm.editJmpValue(cod.getLinha(), label.getLinha() + 1);
                     break;
                 }
             }

@@ -6,6 +6,7 @@
 package marcoscompilator;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentListener;
@@ -16,6 +17,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -27,7 +30,9 @@ import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuKeyEvent;
 import javax.swing.event.MenuKeyListener;
 import javax.swing.event.MenuListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.Document;
 import javax.swing.text.Element;
@@ -41,20 +46,13 @@ import javax.swing.text.BadLocationException;
  */
 public class VirtualMachine extends javax.swing.JFrame {
 
-    public static final int SLEEPING = 0;
-    public static final int RUN = 1;
-    public static final int RUN_DEBUG = 2;
-    
-    DefaultTableModel model, modelStack;
+    ArrayList<Integer> breakPoints;
+    DefaultTableModel modelTableInstrucoes, modelStack;
     JTextArea lines;
     Filter filterDocument;
     InterfaceVmCodigo interfaceVmCodigo;
     String valorLido;
-    boolean executando;
-    boolean executandoDebug;
-    boolean nextInstruction;
-    int stopInstruction;
-    public static int state;
+    boolean executando, isDebug, isBreakPoint;
     
     private static VirtualMachine instance = null;
     
@@ -65,46 +63,44 @@ public class VirtualMachine extends javax.swing.JFrame {
 
     public VirtualMachine() {
         initComponents();
-        model = (DefaultTableModel) tableInstrucoes.getModel();
+        modelTableInstrucoes = (DefaultTableModel) tableInstrucoes.getModel();
         modelStack = (DefaultTableModel) tablePilha.getModel();
+        interfaceVmCodigo = new InterfaceVmCodigo();
         valorLido = "";
-        stopInstruction = -1;
         executando = false;
-        executandoDebug = false;
-        nextInstruction = false;
-        state = SLEEPING;
+        breakPoints = new ArrayList<>();
     }
     
     public void addAsmRow(int i, String instrucao){
-        model.addRow(new Object[]{i, instrucao, "", ""});
+        modelTableInstrucoes.addRow(new Object[]{i, instrucao, "", ""});
     }
     
     public void addAsmRow(int i, String instrucao, int param1){
-        model.addRow(new Object[]{i, instrucao, param1, ""});
+        modelTableInstrucoes.addRow(new Object[]{i, instrucao, param1, ""});
     }
     
     public void addAsmRow(int i, String instrucao, int param1, int param2){
-        model.addRow(new Object[]{i, instrucao, param1, param2});
+        modelTableInstrucoes.addRow(new Object[]{i, instrucao, param1, param2});
     }
 
     public void editJmpValue(int value, int row){
-        model.setValueAt(value, row - 1, 2);
+        modelTableInstrucoes.setValueAt(value, row - 1, 2);
     }
     
     public void setComment(int row, String comment){
-        model.setValueAt(comment, row - 1, 4);
+        modelTableInstrucoes.setValueAt(comment, row - 1, 4);
     }
     
     public String getOperation(int row){
-        return (String)model.getValueAt(row - 1, 1);
+        return (String)modelTableInstrucoes.getValueAt(row - 1, 1);
     }
     
     public int getParam1(int row){
-        return (int)model.getValueAt(row - 1, 2);
+        return (int)modelTableInstrucoes.getValueAt(row - 1, 2);
     }
     
     public int getParam2(int row){
-        return (int)model.getValueAt(row - 1, 3);
+        return (int)modelTableInstrucoes.getValueAt(row - 1, 3);
     }
     
     public void updateStack(ArrayList<Integer> m){
@@ -146,10 +142,9 @@ public class VirtualMachine extends javax.swing.JFrame {
         btnRun = new javax.swing.JButton();
         menu = new javax.swing.JMenuBar();
         mArquivo = new javax.swing.JMenu();
-        mReset = new javax.swing.JMenu();
+        mEditar = new javax.swing.JMenu();
         mExecutar = new javax.swing.JMenu();
         mDebug = new javax.swing.JMenu();
-        mStatus = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -186,14 +181,9 @@ public class VirtualMachine extends javax.swing.JFrame {
         tableInstrucoes.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_LAST_COLUMN);
         tableInstrucoes.setMinimumSize(new java.awt.Dimension(390, 64));
         jScrollPane3.setViewportView(tableInstrucoes);
-        tableInstrucoes.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                System.out.println(tableInstrucoes.getValueAt(tableInstrucoes.getSelectedRow(), 0).toString());
-                stopInstruction = Integer.parseInt(tableInstrucoes.getValueAt(tableInstrucoes.getSelectedRow(), 0).toString())-1;
-                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-        });
+        
+        tableInstrucoes.setDefaultRenderer(Object.class, new MeuRenderizador());
+        
         if (tableInstrucoes.getColumnModel().getColumnCount() > 0) {
             tableInstrucoes.getColumnModel().getColumn(0).setResizable(false);
             tableInstrucoes.getColumnModel().getColumn(0).setPreferredWidth(20);
@@ -293,7 +283,6 @@ public class VirtualMachine extends javax.swing.JFrame {
                 btnNextActionPerformed(evt);
             }
         });
-        btnNext.setEnabled(false);
 
         
         textTerminal.setColumns(20);
@@ -316,7 +305,7 @@ public class VirtualMachine extends javax.swing.JFrame {
                     textTerminal.setText("");
                     textTerminal.setEditable(false);
                     
-                    returnValueRead();
+                    returnValueRead(isDebug);
                 }
             }
 
@@ -334,7 +323,6 @@ public class VirtualMachine extends javax.swing.JFrame {
                 btnRunActionPerformed(evt);
             }
         });
-        btnRun.setEnabled(false);
 
         javax.swing.GroupLayout pTerminalLayout = new javax.swing.GroupLayout(pTerminal);
         pTerminal.setLayout(pTerminalLayout);
@@ -365,47 +353,43 @@ public class VirtualMachine extends javax.swing.JFrame {
         mArquivo.setText("Arquivo");
         menu.add(mArquivo);
 
-        mReset.setText("Reiniciar");
-        //TODO reset program execution
-        menu.add(mReset);
+        mEditar.setText("Editar");
+        menu.add(mEditar);
 
         mExecutar.setText("Executar");
+        
         mExecutar.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent arg0) {
                 if(!executando){
                     System.out.println("Iniciando execucao");
                     executando = true;
-                    mDebug.setEnabled(false);
-                    
-                    runCode(RUN);
+                    isDebug = false;
+                    runCode(isDebug);
                 }else{
                     System.out.println("Programa ja executando");
                 }
             }
         });
+        
+
         menu.add(mExecutar);
 
-        
         mDebug.setText("Debug");
+        
         mDebug.addChangeListener(new ChangeListener() {
             @Override
-            public void stateChanged(ChangeEvent arg0) {
-                if(!executandoDebug){
-                    System.out.println("Iniciando execucao");
-                    executandoDebug = true;
-                    mExecutar.setEnabled(false);
-                    
-                    runCode(RUN_DEBUG);
-                }else{
-                    System.out.println("Programa ja executandoDebug");
+            public void stateChanged(ChangeEvent ce){
+                if(!executando){
+                    System.out.println("Iniciando execucao debug");
+                    executando = true;
+                    isDebug = true;
+                    runCode(isDebug);
                 }
             }
         });
-        menu.add(mDebug);
         
-        mStatus.setText("");
-        menu.add(mStatus);
+        menu.add(mDebug);
         
         setJMenuBar(menu);
         
@@ -430,23 +414,18 @@ public class VirtualMachine extends javax.swing.JFrame {
                 .addComponent(pTerminal, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
-
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    //Quando for proxima instrucao
     private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
-        btnNext.setEnabled(false);
-        InterfaceVmCodigo.setNxtInst(true);
-        interfaceVmCodigo.runDebug(this, stopInstruction);
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnNextActionPerformed
+        runCode(isDebug);
+    }
 
     private void btnRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRunActionPerformed
-        btnRun.setEnabled(false);
-        InterfaceVmCodigo.setNxtInst(false);
-        interfaceVmCodigo.run(this);
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnRunActionPerformed
+        interfaceVmCodigo.setIsRun(true);
+        runCode(isDebug);
+    }
 
     public static void main(String args[]) {
 
@@ -486,9 +465,8 @@ public class VirtualMachine extends javax.swing.JFrame {
     private javax.swing.JTextArea textCode;
     private javax.swing.JMenuItem mArquivo;
     private javax.swing.JMenuItem mDebug;
-    private javax.swing.JMenuItem mReset;
+    private javax.swing.JMenuItem mEditar;
     private javax.swing.JMenuItem mExecutar;
-    private javax.swing.JMenuItem mStatus;
     private javax.swing.JMenuBar menu;
     private javax.swing.JPanel pInstrucoes;
     private javax.swing.JPanel pPilha;
@@ -537,7 +515,7 @@ public class VirtualMachine extends javax.swing.JFrame {
     }
     
     public void setTableCom(String str, int line){
-        model.setValueAt(str, line, 4);
+        modelTableInstrucoes.setValueAt(str, line, 4);
     }
     
     public String getTableInstrucoes(int line){
@@ -562,52 +540,74 @@ public class VirtualMachine extends javax.swing.JFrame {
         }
     }
     
-    private void runCode(int state){
-        interfaceVmCodigo = new InterfaceVmCodigo();
-        this.state = state;
-        if(this.state == RUN){
-            System.out.println("runCode");
-            interfaceVmCodigo.run(this);
-        }
-        if(this.state == RUN_DEBUG){
-            System.out.println("runCodeDebug");
-            InterfaceVmCodigo.setNxtInst(false);
-            interfaceVmCodigo.runDebug(this, stopInstruction);
-        }  
+    private void runCode(boolean isDebug){
+        System.out.println("runCode");
+        interfaceVmCodigo.run(this, isDebug, breakPoints);
     }
     
     public void readValue(){
-        mStatus.setForeground(Color.GREEN);
-        mStatus.setText("Line "+(InterfaceVmCodigo.getI()));
         textTerminal.setEditable(true);
+    }   
+    
+    private void returnValueRead(boolean isDebug){
+        System.out.println("Valor lido: " + valorLido);
+        interfaceVmCodigo.setReturnedValue(this, Integer.parseInt(valorLido), isDebug, breakPoints);
     }
     
-    private void returnValueRead(){
-        if (this.state == RUN) {
-            System.out.println("Valor lido: " + valorLido);
-            interfaceVmCodigo.setReturnedValue(this, Integer.parseInt(valorLido));
+        private class MeuRenderizador implements TableCellRenderer {
+
+        // toda célula vai ser renderizada por um JLabel
+        // poderia ser qualquer outro componente
+        // poderia ter mais de um componente, para renderizar celulas diferentes
+        private final JLabel componenteRenderizador;
+
+        
+        
+        
+    MeuRenderizador() {
+            componenteRenderizador = new JLabel();
+            componenteRenderizador.setOpaque(true);
         }
-        if(this.state == RUN_DEBUG){
-            System.out.println("Valor lido: " + valorLido);
-            interfaceVmCodigo.setReturnedValue(this, Integer.parseInt(valorLido), stopInstruction);
-        }  
-    }
-    
-    public void finishExecution(){
-        if(this.state == RUN){
-            mDebug.setEnabled(true);
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object conteudo, boolean selecionada, boolean focada, int lin, int col) {
+            // atualizar componente renderizador
+            componenteRenderizador.setText(String.valueOf(conteudo));
+            componenteRenderizador.setBackground(getCor(lin, selecionada));
+            
+            return componenteRenderizador;
         }
-        if(this.state == RUN_DEBUG){
-            mExecutar.setEnabled(true);
+
+        // escolhe a cor a partir da linha
+        private Color getCor(int linha, boolean selecionada) {
+
+            // linhas selecionadas são azuis
+            if (selecionada) {
+                if(breakPoints.contains(linha)){
+                    for(int i = 0; i < breakPoints.size(); i++){
+                        if(breakPoints.get(i) == linha){
+                            breakPoints.remove(i);
+                            System.out.println("Numero de break points: " + breakPoints.size());
+                            return Color.WHITE;
+                        }
+                    }
+                }
+                breakPoints.add(linha);
+                System.out.println("Numero de break points: " + breakPoints.size());
+                return Color.CYAN;
+            }//TODO
+            
+            if(breakPoints.contains(linha)){
+                System.out.println("Numero de break points: " + breakPoints.size());
+                return Color.CYAN;
+            }
+            System.out.println("Numero de break points: " + breakPoints.size());
+            return Color.WHITE;
+            // linhas pares são amarelas e impares são verdes
+            // isso vai criar um efeito zebrado
+            //if (linha % 2 == 0) {
+            //    return Color.YELLOW;
+            //}
         }
-        mStatus.setText("");
-    }
-    
-    public void interruption(){
-        stopInstruction = -1;
-        mStatus.setForeground(Color.GREEN);
-        mStatus.setText("Line "+(InterfaceVmCodigo.getI()));
-        btnNext.setEnabled(true);
-        btnRun.setEnabled(true);
     }
 }

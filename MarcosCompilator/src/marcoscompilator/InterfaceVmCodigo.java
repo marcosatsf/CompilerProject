@@ -4,31 +4,26 @@ import java.util.ArrayList;
 
 public class InterfaceVmCodigo {
 
-    private static int i, s;
+    static int i, s;
     ArrayList<Integer> m;
     VirtualMachine vm;
     Instrucoes inst;
     static boolean lido;
-    private static boolean nxtInst;
+    boolean isRun;
 
     public InterfaceVmCodigo() {
         inst = new Instrucoes();
         m = new ArrayList<>();
         i = 0;
-        s = -1;
+        isRun = false;
     }
 
-    public void setReturnedValue(VirtualMachine vm, int val) {
+    public void setReturnedValue(VirtualMachine vm, int val, boolean isDebug, ArrayList<Integer> breakPoints) {
         m.add(val);
-        run(vm);
-    }
-    
-    public void setReturnedValue(VirtualMachine vm, int val, int local) {
-        m.add(val);
-        runDebug(vm, local);
+        run(vm, isDebug, breakPoints);
     }
 
-    public void run(VirtualMachine vm) {
+    public void run(VirtualMachine vm, boolean isDebug, ArrayList<Integer> breakPoints) {
         int opRet;
         String instrucao;
         while (true) {
@@ -36,61 +31,44 @@ public class InterfaceVmCodigo {
             System.out.println("Executando: " + instrucao);
             opRet = inst.execute(instrucao, i, s, m, vm.getTableParam1(i), vm.getTableParam2(i));
 
+            if(opRet != Instrucoes.MOVE_I)
+                i += 1;
+            
             if (opRet == Instrucoes.READ_VALUE) {
                 lido = false;
                 System.out.println("Pedindo pra VM LER");
                 vm.readValue();
                 break;
             } else if (opRet == Instrucoes.PRINT_VALUE) {
-                System.out.println("Value: " + (m.get(s))); //Tem algo errado, não precisa desse -1 =
+                System.out.println("Value: " + (m.get(s))); //Tem algo errado, não precisa desse -1
                 s--;
+            } else if (opRet == Instrucoes.MOVE_I){
+                System.out.println("Move I");
             }
+            
             vm.updateStack(m);
+            
             if (vm.getTableInstrucoes(i).equals("HLT")) {
-                vm.finishExecution();
                 break;
             }
-            InterfaceVmCodigo.setI(i+1);
+            
+            if(isDebug){
+                if(isRun){
+                    if(breakPoints.contains(i)){
+                        isRun = false;
+                        break;
+                    }
+                }else{
+                    break;
+                }
+            }       
         }
     }
-    
-    public void runDebug(VirtualMachine vm, int local) {
-        int opRet;
-        String instrucao;
-        boolean requestStop = false;
-        do{
-            if(local == i){
-                //requestStop = true;
-                vm.interruption();
-                break;
-            }
-            else{
-                instrucao = vm.getTableInstrucoes(i);
-                System.out.println("Executando: " + instrucao);
-                opRet = inst.execute(instrucao, i, s, m, vm.getTableParam1(i), vm.getTableParam2(i));
-                //---> 'i' is updated!
-                if (opRet == Instrucoes.READ_VALUE) {
-                    lido = false;
-                    System.out.println("Pedindo pra VM LER");
-                    vm.readValue();
-                    break;
-                } else if (opRet == Instrucoes.PRINT_VALUE) {
-                    System.out.println("Value: " + (m.get(s))); //Tem algo errado, não precisa desse -1 =
-                    s--;
-                }
-                vm.updateStack(m);
-                if (vm.getTableInstrucoes(i).equals("HLT")) {
-                    break;
-                }
-                InterfaceVmCodigo.setI(i+1);
-                if (isNxtInst()){
-                    vm.interruption();
-                    break;
-                }
-            }
-        }while (true);
-    }
 
+    public void setIsRun(boolean x){
+        isRun = x;
+    }
+    
     public static void setLeitura(boolean x) {
         lido = x;
     }
@@ -109,21 +87,9 @@ public class InterfaceVmCodigo {
             }
         }
     }
-    
-    public static void setNxtInst(boolean value){
-        nxtInst = value;
-    }
-    
-    public static boolean isNxtInst(){
-        return nxtInst;
-    }
 
     public static void setI(int newI) {
         i = newI;
-    }
-    
-    public static int getI() {
-        return i;
     }
 
     public static void setS(int newS) {
