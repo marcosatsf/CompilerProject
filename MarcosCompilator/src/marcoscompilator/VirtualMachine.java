@@ -366,8 +366,6 @@ public class VirtualMachine extends javax.swing.JFrame {
                     executando = true;
                     isDebug = false;
                     runCode(isDebug);
-                }else{
-                    System.out.println("Programa ja executando");
                 }
             }
         });
@@ -526,7 +524,7 @@ public class VirtualMachine extends javax.swing.JFrame {
         try{
         return Integer.parseInt(tableInstrucoes.getValueAt(line, 2).toString());
         }catch(NumberFormatException e){
-            System.out.println("Nao tem param 1");
+            //System.out.println("Nao tem param 1");
             return 0;
         }
     }
@@ -535,7 +533,7 @@ public class VirtualMachine extends javax.swing.JFrame {
         try{
             return Integer.parseInt(tableInstrucoes.getValueAt(line, 3).toString());
         }catch(NumberFormatException e){
-            System.out.println("Nao tem param 2");
+            //System.out.println("Nao tem param 2");
             return 0;
         }
     }
@@ -587,21 +585,21 @@ public class VirtualMachine extends javax.swing.JFrame {
                     for(int i = 0; i < breakPoints.size(); i++){
                         if(breakPoints.get(i) == linha){
                             breakPoints.remove(i);
-                            System.out.println("Numero de break points: " + breakPoints.size());
+                            //System.out.println("Numero de break points: " + breakPoints.size());
                             return Color.WHITE;
                         }
                     }
                 }
                 breakPoints.add(linha);
-                System.out.println("Numero de break points: " + breakPoints.size());
+                //System.out.println("Numero de break points: " + breakPoints.size());
                 return Color.CYAN;
             }//TODO
             
             if(breakPoints.contains(linha)){
-                System.out.println("Numero de break points: " + breakPoints.size());
+                //System.out.println("Numero de break points: " + breakPoints.size());
                 return Color.CYAN;
             }
-            System.out.println("Numero de break points: " + breakPoints.size());
+            //System.out.println("Numero de break points: " + breakPoints.size());
             return Color.WHITE;
             // linhas pares são amarelas e impares são verdes
             // isso vai criar um efeito zebrado

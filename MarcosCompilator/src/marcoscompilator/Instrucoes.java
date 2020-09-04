@@ -54,7 +54,7 @@ public class Instrucoes {
             case "JMP":
                 return JMP(param1);
             case "JMPF":
-                return JMPF(param1, s, m);
+                return JMPF(param1, i, s, m);
             case "NULL":
                 break;
             case "RD":
@@ -408,9 +408,11 @@ public class Instrucoes {
     /*JMPF t (Desviar se falso)
     se M[s] = 0 então i:=t senão i:=i + 1; s:=s-1
      */
-    private int JMPF(int p1, int s, ArrayList<Integer> m) {
+    private int JMPF(int p1, int i, int s, ArrayList<Integer> m) {
         if (m.get(s) == 0) {
             InterfaceVmCodigo.setI(p1);
+        }else{
+            InterfaceVmCodigo.setI(i + 1);
         }
         InterfaceVmCodigo.setS(s-1);
         return MOVE_I;

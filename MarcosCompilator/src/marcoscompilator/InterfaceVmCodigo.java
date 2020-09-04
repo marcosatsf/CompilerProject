@@ -26,10 +26,20 @@ public class InterfaceVmCodigo {
     public void run(VirtualMachine vm, boolean isDebug, ArrayList<Integer> breakPoints) {
         int opRet;
         String instrucao;
+        int param1;
+        int param2;
         while (true) {
             instrucao = vm.getTableInstrucoes(i);
-            System.out.println("Executando: " + instrucao);
-            opRet = inst.execute(instrucao, i, s, m, vm.getTableParam1(i), vm.getTableParam2(i));
+            param1 = vm.getTableParam1(i);
+            param2 = vm.getTableParam2(i);
+            
+            System.out.println("Valores: i: " + i + " s: " + s);
+            System.out.println("Instrucao que sera executada: " + 
+                        instrucao + 
+                            " " + param1 +
+                                " " + param2);
+
+            opRet = inst.execute(instrucao, i, s, m, param1, param2);
 
             if(opRet != Instrucoes.MOVE_I)
                 i += 1;
