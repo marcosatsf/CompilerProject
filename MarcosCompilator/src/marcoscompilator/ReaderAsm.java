@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 
 public class ReaderAsm {
 
@@ -49,7 +50,7 @@ public class ReaderAsm {
             vm.setVisible(true);
 
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(ReaderAsm.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(vm, "Erro ao tentar abrir o arquivo.", "Ooops", JOptionPane.WARNING_MESSAGE);
         }
     }
 

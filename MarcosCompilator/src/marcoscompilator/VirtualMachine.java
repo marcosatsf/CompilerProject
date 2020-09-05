@@ -5,6 +5,7 @@
  */
 package marcoscompilator;
 
+import com.sun.tools.javac.util.StringUtils;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
@@ -18,6 +19,7 @@ import java.util.logging.Logger;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.event.ChangeEvent;
@@ -46,12 +48,16 @@ import javax.swing.text.BadLocationException;
  */
 public class VirtualMachine extends javax.swing.JFrame {
 
+    private static final int INDEX_NOT_FOUND = -1;
+    
     ArrayList<Integer> breakPoints;
     DefaultTableModel modelTableInstrucoes, modelStack;
     JTextArea lines;
     Filter filterDocument;
     InterfaceVmCodigo interfaceVmCodigo;
     String valorLido;
+    String terminal;
+    String temporario;
     boolean executando, isDebug, isBreakPoint;
     
     private static VirtualMachine instance = null;
@@ -67,6 +73,7 @@ public class VirtualMachine extends javax.swing.JFrame {
         modelStack = (DefaultTableModel) tablePilha.getModel();
         interfaceVmCodigo = new InterfaceVmCodigo();
         valorLido = "";
+        temporario = "";
         executando = false;
         breakPoints = new ArrayList<>();
     }
@@ -114,6 +121,64 @@ public class VirtualMachine extends javax.swing.JFrame {
                modelStack.addRow(new Object[]{pos, m.get(pos)}); 
             }                
         }
+    }
+    
+        public void setTableCom(String str, int line){
+        modelTableInstrucoes.setValueAt(str, line, 4);
+    }
+    
+    public String getTableInstrucoes(int line){
+        return tableInstrucoes.getValueAt(line, 1).toString();
+    }
+    
+    public int getTableParam1(int line){
+        try{
+        return Integer.parseInt(tableInstrucoes.getValueAt(line, 2).toString());
+        }catch(NumberFormatException e){
+            //System.out.println("Nao tem param 1");
+            return 0;
+        }
+    }
+    
+    public int getTableParam2(int line){
+        try{
+            return Integer.parseInt(tableInstrucoes.getValueAt(line, 3).toString());
+        }catch(NumberFormatException e){
+            //System.out.println("Nao tem param 2");
+            return 0;
+        }
+    }
+    
+    private void runCode(boolean isDebug){
+        System.out.println("runCode");
+        interfaceVmCodigo.run(this, isDebug, breakPoints);
+    }
+    
+    public void readValue(){
+        textTerminal.setEditable(true);
+        if(terminal == null){
+            terminal = "Entrada: ";
+            textTerminal.setText(terminal);
+        }else{
+            terminal = terminal + "\nEntrada: ";
+            textTerminal.setText(terminal);
+        }
+    }
+    
+    public void printValue(int value){
+        if(terminal == null){
+            terminal = "Saida: " + value;
+            textTerminal.setText(terminal);
+        } else{
+            terminal = terminal + "\nSaida: " + value;
+            textTerminal.setText(terminal);
+        }
+    }
+    
+    private void returnValueRead(boolean isDebug){
+        textTerminal.setEditable(false);
+        System.out.println("Valor lido: " + valorLido);
+        interfaceVmCodigo.setReturnedValue(this, Integer.parseInt(valorLido), isDebug, breakPoints);
     }
     
     /**
@@ -287,30 +352,65 @@ public class VirtualMachine extends javax.swing.JFrame {
         
         textTerminal.setColumns(20);
         textTerminal.setRows(5);
-        textTerminal.setText("");
+        textTerminal.setText(terminal);
         textTerminal.setEditable(false);
+        
         textTerminal.addKeyListener(new KeyListener() {
             @Override
-            public void keyTyped(KeyEvent e) {}
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if(e.getKeyCode() == KeyEvent.VK_ENTER){
-                    //Regex parsear quando for enter ou espaço =)
-                    valorLido = "";
-                    String[] aux = textTerminal.getText().split("Entrada: |\\r\\n|\\n|\\r");
-                    for (String character : aux) {
-                        valorLido += character;
-                    }
-                    textTerminal.setText("");
-                    textTerminal.setEditable(false);
-                    
-                    returnValueRead(isDebug);
-                }
+            public void keyTyped(KeyEvent e) {
             }
 
             @Override
-            public void keyReleased(KeyEvent e) {}
+            public void keyPressed(KeyEvent e) {   
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                /* 1. Quando for o caracter ENTER o programa ira pegar o valor
+                 * inserido pelo usuário para realizar as instruções
+                 * 
+                 * 2. Quando for o caracter BACKSPACE o usuário o programa ira
+                 * avaliar o que o usuário inseriu, realizar o diff e exibir o
+                 * texto inteiro novamente removendo apenas o ultimo caracter 
+                 * inserido nessa rodada.
+                 *
+                 * 3. Toda vez que um caracter novo for inserido o programa ira
+                 * aramzenar todo o texto da textTerminal.
+                 *
+                 */
+                if(e.getKeyCode() == KeyEvent.VK_ENTER){
+                    
+                    temporario = temporario.replace("\n", "").replace("\r", "");
+                    System.out.println("Lido: " + temporario);
+                    
+                    terminal = terminal + temporario;
+                    //textTerminal.setText(terminal);
+                    
+                    if(temporario.matches("[0-9]+")){
+                        valorLido = temporario;
+                        temporario = "";
+                        returnValueRead(isDebug);
+                    } else {
+                        temporario = "";
+                        terminal = terminal + "\nValor invalido! Entrada: ";
+                        textTerminal.setText(terminal);
+                    }
+                } else if(e.getKeyCode() == KeyEvent.VK_BACK_SPACE){
+                    //String diff = differenceString(temporario, textTerminal.getText());
+                    System.out.println("Temporario inicial: [" + temporario + "]");
+                    System.out.println("Terminal: [" + terminal + "]");
+                    if(temporario.length() > 1){
+                        temporario = temporario.substring(0, temporario.length() - 1);
+                        System.out.println("Temporario novo: [" + temporario + "]");
+                        System.out.println("Terminal + Temp: [" +terminal + temporario + "]");
+                    } else {
+                        textTerminal.setText(terminal);
+                    }
+                } else {
+                    temporario = differenceString(terminal, textTerminal.getText());
+                    System.out.println("Temporario Atualizado: " + temporario);
+                }
+            }
         });
         
         filterDocument = new Filter();
@@ -415,6 +515,38 @@ public class VirtualMachine extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private String differenceString(String str1, String str2){
+        if(str1 == null)
+            return str2;
+        if(str2 == null)
+            return str1;
+        int at = indexOfDifference(str1, str2);
+        
+        if(at == INDEX_NOT_FOUND)
+            return "";
+        return str2.substring(at);
+    }
+    
+    private int indexOfDifference(CharSequence cs1, CharSequence cs2){
+        if(cs1 == cs2)
+            return INDEX_NOT_FOUND;
+        
+        if(cs1 == null || cs2 == null)
+            return 0;
+        
+        int i;
+        
+        for(i = 0; i < cs1.length() && i < cs2.length(); ++i){
+            if(cs1.charAt(i) != cs2.charAt(i)){
+                break;
+            }
+        }
+        if(i < cs2.length() || i < cs1.length())
+            return i;
+        
+        return INDEX_NOT_FOUND;
+    }
+    
     //Quando for proxima instrucao
     private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
         runCode(isDebug);
@@ -512,57 +644,11 @@ public class VirtualMachine extends javax.swing.JFrame {
         }
     }
     
-    public void setTableCom(String str, int line){
-        modelTableInstrucoes.setValueAt(str, line, 4);
-    }
-    
-    public String getTableInstrucoes(int line){
-        return tableInstrucoes.getValueAt(line, 1).toString();
-    }
-    
-    public int getTableParam1(int line){
-        try{
-        return Integer.parseInt(tableInstrucoes.getValueAt(line, 2).toString());
-        }catch(NumberFormatException e){
-            //System.out.println("Nao tem param 1");
-            return 0;
-        }
-    }
-    
-    public int getTableParam2(int line){
-        try{
-            return Integer.parseInt(tableInstrucoes.getValueAt(line, 3).toString());
-        }catch(NumberFormatException e){
-            //System.out.println("Nao tem param 2");
-            return 0;
-        }
-    }
-    
-    private void runCode(boolean isDebug){
-        System.out.println("runCode");
-        interfaceVmCodigo.run(this, isDebug, breakPoints);
-    }
-    
-    public void readValue(){
-        textTerminal.setEditable(true);
-    }   
-    
-    private void returnValueRead(boolean isDebug){
-        System.out.println("Valor lido: " + valorLido);
-        interfaceVmCodigo.setReturnedValue(this, Integer.parseInt(valorLido), isDebug, breakPoints);
-    }
-    
-        private class MeuRenderizador implements TableCellRenderer {
+    private class MeuRenderizador implements TableCellRenderer {
 
-        // toda célula vai ser renderizada por um JLabel
-        // poderia ser qualquer outro componente
-        // poderia ter mais de um componente, para renderizar celulas diferentes
         private final JLabel componenteRenderizador;
 
-        
-        
-        
-    MeuRenderizador() {
+        MeuRenderizador() {
             componenteRenderizador = new JLabel();
             componenteRenderizador.setOpaque(true);
         }
@@ -585,27 +671,18 @@ public class VirtualMachine extends javax.swing.JFrame {
                     for(int i = 0; i < breakPoints.size(); i++){
                         if(breakPoints.get(i) == linha){
                             breakPoints.remove(i);
-                            //System.out.println("Numero de break points: " + breakPoints.size());
                             return Color.WHITE;
                         }
                     }
                 }
                 breakPoints.add(linha);
-                //System.out.println("Numero de break points: " + breakPoints.size());
                 return Color.CYAN;
             }//TODO
             
             if(breakPoints.contains(linha)){
-                //System.out.println("Numero de break points: " + breakPoints.size());
                 return Color.CYAN;
             }
-            //System.out.println("Numero de break points: " + breakPoints.size());
             return Color.WHITE;
-            // linhas pares são amarelas e impares são verdes
-            // isso vai criar um efeito zebrado
-            //if (linha % 2 == 0) {
-            //    return Color.YELLOW;
-            //}
         }
     }
 }

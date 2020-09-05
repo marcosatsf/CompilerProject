@@ -50,7 +50,8 @@ public class InterfaceVmCodigo {
                 vm.readValue();
                 break;
             } else if (opRet == Instrucoes.PRINT_VALUE) {
-                System.out.println("Value: " + (m.get(s))); //Tem algo errado, não precisa desse -1
+                System.out.println("Pedindo pra VM PRINTAR");
+                vm.printValue(m.get(s));
                 s--;
             } else if (opRet == Instrucoes.MOVE_I){
                 System.out.println("Move I");
