@@ -60,7 +60,7 @@ public class VirtualMachine extends javax.swing.JFrame {
     String valorLido;
     String terminal;
     String temporario;
-    boolean executando, isDebug, isBreakPoint, isNext;
+    boolean executando, isDebug, isBreakPoint;
     
     private static VirtualMachine instance = null;
     
@@ -153,7 +153,7 @@ public class VirtualMachine extends javax.swing.JFrame {
     
     private void runCode(boolean isDebug){
         System.out.println("runCode");
-        interfaceVmCodigo.run(this, isDebug, breakPoints, isNext);
+        interfaceVmCodigo.run(this, isDebug, breakPoints);
     }
     
     public void readValue(){
@@ -180,8 +180,7 @@ public class VirtualMachine extends javax.swing.JFrame {
     private void returnValueRead(boolean isDebug){
         textTerminal.setEditable(false);
         System.out.println("Valor lido: " + valorLido);
-        isNext = true;
-        interfaceVmCodigo.setReturnedValue(this, Integer.parseInt(valorLido), isDebug, breakPoints, isNext);
+        interfaceVmCodigo.setReturnedValue(this, Integer.parseInt(valorLido), isDebug, breakPoints);
     }
     
     /**
@@ -389,7 +388,6 @@ public class VirtualMachine extends javax.swing.JFrame {
                     if(temporario.matches("[0-9]+")){
                         valorLido = temporario;
                         temporario = "";
-                        isNext = true;
                         returnValueRead(isDebug);
                     } else {
                         temporario = "";
@@ -461,7 +459,6 @@ public class VirtualMachine extends javax.swing.JFrame {
                     System.out.println("Iniciando execucao");
                     executando = true;
                     isDebug = false;
-                    isNext = true;
                     runCode(isDebug);
                 }
             }
@@ -480,7 +477,6 @@ public class VirtualMachine extends javax.swing.JFrame {
                     executando = true;
                     isDebug = true;
                     interfaceVmCodigo.setIsRun(true);
-                    isNext = false;
                     runCode(isDebug);
                 }
             }
@@ -548,13 +544,11 @@ public class VirtualMachine extends javax.swing.JFrame {
     
     //Quando for proxima instrucao
     private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
-        isNext = true;
         runCode(isDebug);
     }
 
     private void btnRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRunActionPerformed
         interfaceVmCodigo.setIsRun(true);
-        isNext = false;
         runCode(isDebug);
     }
 
