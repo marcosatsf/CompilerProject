@@ -44,9 +44,7 @@ public class ReaderAsm {
             }
 
             verifyLabels();
-
             interfaceVmCodigo.populateTableCom(vm);
-
             vm.setVisible(true);
 
         } catch (FileNotFoundException ex) {

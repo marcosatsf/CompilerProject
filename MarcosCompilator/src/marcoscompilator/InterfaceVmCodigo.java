@@ -15,20 +15,35 @@ public class InterfaceVmCodigo {
         inst = new Instrucoes();
         m = new ArrayList<>();
         i = 0;
-        isRun = false;
     }
 
-    public void setReturnedValue(VirtualMachine vm, int val, boolean isDebug, ArrayList<Integer> breakPoints) {
+    public void setReturnedValue(VirtualMachine vm, int val, boolean isDebug, ArrayList<Integer> breakPoints, boolean isNext) {
         m.add(val);
-        run(vm, isDebug, breakPoints);
+        run(vm, isDebug, breakPoints, isNext);
     }
 
-    public void run(VirtualMachine vm, boolean isDebug, ArrayList<Integer> breakPoints) {
+    public void run(VirtualMachine vm, boolean isDebug, ArrayList<Integer> breakPoints, boolean isNext) {
         int opRet;
         String instrucao;
         int param1;
         int param2;
         while (true) {
+            
+            if(!isNext){
+                if(isDebug){
+                    if(isRun){
+                        if(breakPoints.contains(i)){
+                            isRun = false;
+                            vm.updateStack(m);
+                            System.out.println("Breikei");
+                            break;
+                        }
+                    }else{
+                        break;
+                    }
+                }
+            }
+            
             instrucao = vm.getTableInstrucoes(i);
             param1 = vm.getTableParam1(i);
             param2 = vm.getTableParam2(i);
@@ -59,20 +74,12 @@ public class InterfaceVmCodigo {
             
             vm.updateStack(m);
             
+            if(isNext)
+                break;
+            
             if (vm.getTableInstrucoes(i).equals("HLT")) {
                 break;
-            }
-            
-            if(isDebug){
-                if(isRun){
-                    if(breakPoints.contains(i)){
-                        isRun = false;
-                        break;
-                    }
-                }else{
-                    break;
-                }
-            }       
+            }     
         }
     }
 

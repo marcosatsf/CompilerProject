@@ -13,6 +13,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,7 +52,7 @@ public class VirtualMachine extends javax.swing.JFrame {
 
     private static final int INDEX_NOT_FOUND = -1;
     
-    ArrayList<Integer> breakPoints;
+    volatile ArrayList<Integer> breakPoints;
     DefaultTableModel modelTableInstrucoes, modelStack;
     JTextArea lines;
     Filter filterDocument;
@@ -58,7 +60,7 @@ public class VirtualMachine extends javax.swing.JFrame {
     String valorLido;
     String terminal;
     String temporario;
-    boolean executando, isDebug, isBreakPoint;
+    boolean executando, isDebug, isBreakPoint, isNext;
     
     private static VirtualMachine instance = null;
     
@@ -151,7 +153,7 @@ public class VirtualMachine extends javax.swing.JFrame {
     
     private void runCode(boolean isDebug){
         System.out.println("runCode");
-        interfaceVmCodigo.run(this, isDebug, breakPoints);
+        interfaceVmCodigo.run(this, isDebug, breakPoints, isNext);
     }
     
     public void readValue(){
@@ -178,7 +180,8 @@ public class VirtualMachine extends javax.swing.JFrame {
     private void returnValueRead(boolean isDebug){
         textTerminal.setEditable(false);
         System.out.println("Valor lido: " + valorLido);
-        interfaceVmCodigo.setReturnedValue(this, Integer.parseInt(valorLido), isDebug, breakPoints);
+        isNext = true;
+        interfaceVmCodigo.setReturnedValue(this, Integer.parseInt(valorLido), isDebug, breakPoints, isNext);
     }
     
     /**
@@ -213,12 +216,6 @@ public class VirtualMachine extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        textCode.setColumns(20);
-        textCode.setRows(5);
-        jScrollPane2.setViewportView(textCode);
-
-        pTab.addTab("Editor de Texto", jScrollPane2);
-
         pInstrucoes.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createBevelBorder(0), "Instruções"));
 
         tableInstrucoes.setFont(tableInstrucoes.getFont());
@@ -247,7 +244,10 @@ public class VirtualMachine extends javax.swing.JFrame {
         tableInstrucoes.setMinimumSize(new java.awt.Dimension(390, 64));
         jScrollPane3.setViewportView(tableInstrucoes);
         
+        //tableInstrucoes.getColumn(0).setCellRenderer(new StatusColumnCellRenderer());
         tableInstrucoes.setDefaultRenderer(Object.class, new MeuRenderizador());
+       
+        
         
         if (tableInstrucoes.getColumnModel().getColumnCount() > 0) {
             tableInstrucoes.getColumnModel().getColumn(0).setResizable(false);
@@ -389,6 +389,7 @@ public class VirtualMachine extends javax.swing.JFrame {
                     if(temporario.matches("[0-9]+")){
                         valorLido = temporario;
                         temporario = "";
+                        isNext = true;
                         returnValueRead(isDebug);
                     } else {
                         temporario = "";
@@ -397,18 +398,13 @@ public class VirtualMachine extends javax.swing.JFrame {
                     }
                 } else if(e.getKeyCode() == KeyEvent.VK_BACK_SPACE){
                     //String diff = differenceString(temporario, textTerminal.getText());
-                    System.out.println("Temporario inicial: [" + temporario + "]");
-                    System.out.println("Terminal: [" + terminal + "]");
                     if(temporario.length() > 1){
                         temporario = temporario.substring(0, temporario.length() - 1);
-                        System.out.println("Temporario novo: [" + temporario + "]");
-                        System.out.println("Terminal + Temp: [" +terminal + temporario + "]");
                     } else {
                         textTerminal.setText(terminal);
                     }
                 } else {
                     temporario = differenceString(terminal, textTerminal.getText());
-                    System.out.println("Temporario Atualizado: " + temporario);
                 }
             }
         });
@@ -465,6 +461,7 @@ public class VirtualMachine extends javax.swing.JFrame {
                     System.out.println("Iniciando execucao");
                     executando = true;
                     isDebug = false;
+                    isNext = true;
                     runCode(isDebug);
                 }
             }
@@ -482,6 +479,8 @@ public class VirtualMachine extends javax.swing.JFrame {
                     System.out.println("Iniciando execucao debug");
                     executando = true;
                     isDebug = true;
+                    interfaceVmCodigo.setIsRun(true);
+                    isNext = false;
                     runCode(isDebug);
                 }
             }
@@ -549,11 +548,13 @@ public class VirtualMachine extends javax.swing.JFrame {
     
     //Quando for proxima instrucao
     private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
+        isNext = true;
         runCode(isDebug);
     }
 
     private void btnRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRunActionPerformed
         interfaceVmCodigo.setIsRun(true);
+        isNext = false;
         runCode(isDebug);
     }
 
@@ -657,7 +658,9 @@ public class VirtualMachine extends javax.swing.JFrame {
         public Component getTableCellRendererComponent(JTable table, Object conteudo, boolean selecionada, boolean focada, int lin, int col) {
             // atualizar componente renderizador
             componenteRenderizador.setText(String.valueOf(conteudo));
-            componenteRenderizador.setBackground(getCor(lin, selecionada));
+                        
+            if(col == 0)
+                componenteRenderizador.setBackground(getCor(lin, selecionada));
             
             return componenteRenderizador;
         }
@@ -670,19 +673,21 @@ public class VirtualMachine extends javax.swing.JFrame {
                 if(breakPoints.contains(linha)){
                     for(int i = 0; i < breakPoints.size(); i++){
                         if(breakPoints.get(i) == linha){
+                            System.out.println("BreakPoint Removido  [Linha " + linha + "]");
                             breakPoints.remove(i);
                             return Color.WHITE;
                         }
                     }
                 }
                 breakPoints.add(linha);
-                return Color.CYAN;
-            }//TODO
+                System.out.println("BreakPoint Adicionado [Linha " + linha + "]");
+                return Color.RED;
+            }
             
             if(breakPoints.contains(linha)){
-                return Color.CYAN;
+                return Color.RED;
             }
             return Color.WHITE;
-        }
+        } 
     }
 }
