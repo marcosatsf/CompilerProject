@@ -17,28 +17,24 @@ public class InterfaceVmCodigo {
         i = 0;
     }
 
-    public void setReturnedValue(VirtualMachine vm, int val, boolean isDebug, ArrayList<Integer> breakPoints, boolean isNext) {
+    public void setReturnedValue(VirtualMachine vm, int val, boolean isDebug, ArrayList<Integer> breakPoints) {
         m.add(val);
-        run(vm, isDebug, breakPoints, isNext);
+        run(vm, isDebug, breakPoints);
     }
 
-    public void run(VirtualMachine vm, boolean isDebug, ArrayList<Integer> breakPoints, boolean isNext) {
+    public void run(VirtualMachine vm, boolean isDebug, ArrayList<Integer> breakPoints) {
         int opRet;
         String instrucao;
         int param1;
         int param2;
         while (true) {
             
-            if(!isNext){
-                if(isDebug){
-                    if(isRun){
-                        if(breakPoints.contains(i)){
-                            isRun = false;
-                            vm.updateStack(m);
-                            System.out.println("Breikei");
-                            break;
-                        }
-                    }else{
+            if(isDebug){
+                if(isRun){
+                    if(breakPoints.contains(i)){
+                        isRun = false;
+                        vm.updateStack(m);
+                        System.out.println("Breikei");
                         break;
                     }
                 }
@@ -74,7 +70,7 @@ public class InterfaceVmCodigo {
             
             vm.updateStack(m);
             
-            if(isNext)
+            if(!isRun)
                 break;
             
             if (vm.getTableInstrucoes(i).equals("HLT")) {
