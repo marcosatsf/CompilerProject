@@ -70,12 +70,14 @@ public class InterfaceVmCodigo {
             
             vm.updateStack(m);
             
-            if(!isRun)
+            if (instrucao.equals("HLT")) {
+                System.out.println("O programa chegou ao seu fim.");
+                vm.endExecution();
                 break;
+            }  
             
-            if (vm.getTableInstrucoes(i).equals("HLT")) {
-                break;
-            }     
+            if(!isRun)
+                break;   
         }
     }
 

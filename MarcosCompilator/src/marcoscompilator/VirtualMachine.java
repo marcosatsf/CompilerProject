@@ -177,6 +177,16 @@ public class VirtualMachine extends javax.swing.JFrame {
         }
     }
     
+    public void endExecution(){
+        if(terminal == null){
+            terminal = "Execução encerrada!";
+            textTerminal.setText(terminal);
+        } else{
+            terminal = terminal + "\nExecução encerrada!";
+            textTerminal.setText(terminal);
+        }
+    }
+    
     private void returnValueRead(boolean isDebug){
         textTerminal.setEditable(false);
         System.out.println("Valor lido: " + valorLido);
@@ -459,6 +469,7 @@ public class VirtualMachine extends javax.swing.JFrame {
                     System.out.println("Iniciando execucao");
                     executando = true;
                     isDebug = false;
+                    interfaceVmCodigo.setIsRun(true);
                     runCode(isDebug);
                 }
             }
@@ -663,7 +674,7 @@ public class VirtualMachine extends javax.swing.JFrame {
         private Color getCor(int linha, boolean selecionada) {
 
             // linhas selecionadas são azuis
-            if (selecionada) {
+            if (selecionada && !executando) {
                 if(breakPoints.contains(linha)){
                     for(int i = 0; i < breakPoints.size(); i++){
                         if(breakPoints.get(i) == linha){
