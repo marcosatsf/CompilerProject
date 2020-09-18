@@ -1,11 +1,11 @@
-from reader import Reader
-from analisador import AnalisadorLexico
+from GUItest import Application
+from tkinter import *
+from tkinter import filedialog
+import os
 
-# Lê o texto
-texto = Reader('test.txt')
-# Instancia o analisador com o programa já formatado
-analisador = AnalisadorLexico(texto.get_programa_formatted())    
-# Realiza a quebra em tokens
-analisador.pega_token()
-# Mostra os tokens
-analisador.beauty_print()
+root = Tk()
+root.title("Analisador Léxico LPD")
+root.geometry("500x300")
+root.resizable(width=False, height=False)
+Application(root)
+root.mainloop()
