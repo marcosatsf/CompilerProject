@@ -1,4 +1,4 @@
-from GUItest import Application
+from app import Application
 from tkinter import *
 from tkinter import filedialog
 import os

@@ -37,6 +37,7 @@ class TabelaTokens:
             "e" : "se",
             "ou" : "sou",
             "nao" : "snao",
-            ":" : "sdoispontos"
+            ":" : "sdoispontos",
+            "ERRO": "serro"
         }
     
