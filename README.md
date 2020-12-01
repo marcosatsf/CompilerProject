@@ -1,2 +1,2 @@
 # CompilerProject
-Very basic IDE to compile and execute in *INSERT_NAME_HERE* language
+  Very basic IDE to compile and execute in LPD language
