@@ -1,3 +1,4 @@
+import re
 from tabela_tokens import TabelaTokens
 
 class AnalisadorLexico:
@@ -11,7 +12,9 @@ class AnalisadorLexico:
         self.linha = 1
         self.palavra_restante = self.palavra_original.split('\n')
 
-    def __ret_token(self,lexema,simbolo,linha):
+    def __ret_token(self,lexema,simbolo,erro_str=None):
+        if erro_str:
+             return {'lexema':erro_str,'simbolo':simbolo,'linha':self.linha} 
         var_palavra = self.palavra_restante
         self.palavra_restante = []
         flag = 0
@@ -49,53 +52,54 @@ class AnalisadorLexico:
             string_return += error
         return string_return
 
-    def trata_erro(self):
-        linha = 0
-        qtd_tokens = 0
-        # for token in self.lista_tokens:
-        self.palavra_original = self.palavra_original.replace('\t', ' ')
-        while qtd_tokens < len(self.lista_tokens):
-            indice_n = self.palavra_original.find('\n')
-            indice_token = self.palavra_original.find(self.lista_tokens[qtd_tokens]["lexema"])
-            if indice_n < indice_token:
-                linha += 1
-                self.palavra_original = self.palavra_original[indice_n+1:]
-            else:
-                self.palavra_original = self.palavra_original[indice_token+len(self.lista_tokens[qtd_tokens]["lexema"]):]
-                qtd_tokens += 1
-        indice = 0
+    # def trata_erro(self):
+    #     linha = 0
+    #     qtd_tokens = 0
+    #     # for token in self.lista_tokens:
+    #     self.palavra_original = self.palavra_original.replace('\t', ' ')
+    #     while qtd_tokens < len(self.lista_tokens):
+    #         indice_n = self.palavra_original.find('\n')
+    #         indice_token = self.palavra_original.find(self.lista_tokens[qtd_tokens]["lexema"])
+    #         if indice_n < indice_token:
+    #             linha += 1
+    #             self.palavra_original = self.palavra_original[indice_n+1:]
+    #         else:
+    #             self.palavra_original = self.palavra_original[indice_token+len(self.lista_tokens[qtd_tokens]["lexema"]):]
+    #             qtd_tokens += 1
+    #     indice = 0
 
-        while True:
-            bool_para = True
-            while self.palavra_original[indice] == '\n' or self.palavra_original[indice] == ' ':
-                if self.palavra_original[indice] == '\n':
-                    linha += 1
-                indice += 1
-                bool_para = False
-            if self.palavra_original[indice] == '{':
-                while self.palavra_original[indice] != '}':
-                    if self.palavra_original[indice] == '\n':
-                        linha += 1
-                    indice += 1
-                bool_para = False
-            if self.palavra_original[indice] == '/' and self.palavra_original[indice+1] == '*':
-                while not (self.palavra_original[indice] == '*' and self.palavra_original[indice+1] == '/'):
-                    if self.palavra_original[indice] == '\n':
-                        linha += 1
-                    indice += 1
-                indice += 2
-                bool_para = False
-            if bool_para:
-                break
+    #     while True:
+    #         bool_para = True
+    #         while self.palavra_original[indice] == '\n' or self.palavra_original[indice] == ' ':
+    #             if self.palavra_original[indice] == '\n':
+    #                 linha += 1
+    #             indice += 1
+    #             bool_para = False
+    #         if self.palavra_original[indice] == '{':
+    #             while self.palavra_original[indice] != '}':
+    #                 if self.palavra_original[indice] == '\n':
+    #                     linha += 1
+    #                 indice += 1
+    #             bool_para = False
+    #         if self.palavra_original[indice] == '/' and self.palavra_original[indice+1] == '*':
+    #             while not (self.palavra_original[indice] == '*' and self.palavra_original[indice+1] == '/'):
+    #                 if self.palavra_original[indice] == '\n':
+    #                     linha += 1
+    #                 indice += 1
+    #             indice += 2
+    #             bool_para = False
+    #         if bool_para:
+    #             break
 
-        return linha
+    #     return linha
 
 
     def pega_token(self):
         while self.indice <= len(self.palavra_tratada):
             if self.caractere_atual.isdigit():
                 self.__trata_digito()
-            elif self.caractere_atual.isalpha():
+            # elif self.caractere_atual.isalpha():
+            elif re.search("[a-zA-Z]", self.caractere_atual):
                 self.__trata_iden_reserva()
             elif self.caractere_atual == ':':
                 self.__trata_atribuicao()
@@ -105,7 +109,7 @@ class AnalisadorLexico:
                 try:
                     self.__trata_op_relac()
                 except AttributeError as err:
-                    self.lista_tokens.append(self.__ret_token(err,self.tabela_tokens['ERRO'],0))
+                    self.lista_tokens.append(self.__ret_token(0,self.tabela_tokens['ERRO'],err))
                     break
             elif self.caractere_atual in ['(',';',')','.',',']:
                 self.__trata_pontuacao()
@@ -115,11 +119,14 @@ class AnalisadorLexico:
                         self.caractere_atual = self.__get_next()
                     else:
                         if self.caractere_atual in ['{','/']:
-                            verify_error_string = f"ERRO no comentário, linha: {self.trata_erro()+1}"
+                            #verify_error_string = f"ERRO no comentário, linha: {self.trata_erro()+1}"
+                            verify_error_string = f"ERRO no comentário, linha: {self.linha}"
                         else:
-                            verify_error_string = f"ERRO, linha: {self.trata_erro()+1}, caractere: {self.caractere_atual}"
+                            #verify_error_string = f"ERRO, linha: {self.trata_erro()+1}, caractere: {self.caractere_atual}"
+                            verify_error_string = f"ERRO, linha: {self.linha}, caractere: {self.caractere_atual}"
 
-                        self.lista_tokens.append(self.__ret_token(verify_error_string,self.tabela_tokens['ERRO'],0))
+                        #self.lista_tokens.append(self.__ret_token(verify_error_string,self.tabela_tokens['ERRO'],0))
+                        self.lista_tokens.append(self.__ret_token(0,self.tabela_tokens['ERRO'],verify_error_string))
                         break
                         #raise AttributeError(verify_error_string)
                 except IndexError:
@@ -136,7 +143,9 @@ class AnalisadorLexico:
     def __trata_iden_reserva(self):
         c = self.caractere_atual
         self.caractere_atual = self.__get_next()
-        while self.caractere_atual.isalpha() or self.caractere_atual.isdigit() or self.caractere_atual == '_':
+        while re.search("[a-zA-Z]", self.caractere_atual) or \
+            self.caractere_atual.isdigit() or \
+            self.caractere_atual == '_':
             c = c + self.caractere_atual
             self.caractere_atual = self.__get_next()
         try:
@@ -182,7 +191,8 @@ class AnalisadorLexico:
                 self.lista_tokens.append(self.__ret_token(c+self.caractere_atual,self.tabela_tokens[c+self.caractere_atual],0))
                 self.caractere_atual = self.__get_next()
             else:
-                raise AttributeError(f"ERRO, linha: {self.trata_erro()}, caractere: {c}")
+                #raise AttributeError(f"ERRO, linha: {self.trata_erro()}, caractere: {c}")
+                raise AttributeError(f"ERRO, linha: {self.linha}, caractere: {c}")
         elif self.caractere_atual == '=':
             self.lista_tokens.append(self.__ret_token(self.caractere_atual,self.tabela_tokens[self.caractere_atual],0))
             self.caractere_atual = self.__get_next()
