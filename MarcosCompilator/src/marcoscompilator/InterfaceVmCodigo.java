@@ -18,7 +18,12 @@ public class InterfaceVmCodigo {
     }
 
     public void setReturnedValue(VirtualMachine vm, int val, boolean isDebug, ArrayList<Integer> breakPoints) {
-        m.add(val);
+        try{
+            m.set(s, val);
+        }catch (IndexOutOfBoundsException e){
+            m.add(val);
+        }
+        
         run(vm, isDebug, breakPoints);
     }
 

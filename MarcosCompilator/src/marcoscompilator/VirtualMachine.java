@@ -5,7 +5,6 @@
  */
 package marcoscompilator;
 
-import com.sun.tools.javac.util.StringUtils;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
@@ -455,8 +454,14 @@ public class VirtualMachine extends javax.swing.JFrame {
         );
 
         mArquivo.setText("Arquivo");
+        /*mArquivo.addChangeListener(new ChangeListener(){
+           @Override
+           public void stateChanged(ChangeEvent arg0) {
+           
+           }
+        });*/
         menu.add(mArquivo);
-
+        
         mEditar.setText("Editar");
         menu.add(mEditar);
 
@@ -474,8 +479,6 @@ public class VirtualMachine extends javax.swing.JFrame {
                 }
             }
         });
-        
-
         menu.add(mExecutar);
 
         mDebug.setText("Debug");
