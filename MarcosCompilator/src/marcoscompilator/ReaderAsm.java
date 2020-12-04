@@ -6,74 +6,77 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 
 public class ReaderAsm {
-    
+
     private String path;
     private VirtualMachine vm;
     private ArrayList<IndiceMap> instructionPointer;
     private ArrayList<IndiceMap> completeLabel;
-    
-    public ReaderAsm(String path){
+    private InterfaceVmCodigo interfaceVmCodigo;
+
+    public ReaderAsm(String path) {
         this.path = path;
-        vm = new VirtualMachine();
+        vm = VirtualMachine.getInstance();
         instructionPointer = new ArrayList<>();
         completeLabel = new ArrayList<>();
+        interfaceVmCodigo = new InterfaceVmCodigo();
         readFile();
     }
-    
-    private void readFile(){
+
+    private void readFile() {
         try {
             File c = new File(path);
             Scanner myReader = new Scanner(c);
-            
+
             String data;
             String[] splitted;
-            
-            int i = 1;
-            
-            while(myReader.hasNextLine()){
+
+            int i = 0;
+
+            while (myReader.hasNextLine()) {
                 data = myReader.nextLine();
                 splitted = data.split("( )|,");
-                
+
                 populateTable(i, splitted);
                 i++;
             }
-            
+
             verifyLabels();
-            
+            interfaceVmCodigo.populateTableCom(vm);
             vm.setVisible(true);
-        
+
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(ReaderAsm.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(vm, "Erro ao tentar abrir o arquivo.", "Ooops", JOptionPane.WARNING_MESSAGE);
         }
     }
 
-    private void verifyLabels(){
-        for(IndiceMap label : completeLabel){           //JMP/JMPF/CALL e a label que eles pulam
-            for(IndiceMap cod : instructionPointer){    //Label e a linha que ela ta 
-                if(label.getLabel().equals(cod.getLabel())){
-                    vm.editJmpValue(cod.getLinha(), label.getLinha());
+    private void verifyLabels() {
+        for (IndiceMap label : completeLabel) {           //JMP/JMPF/CALL e a label que eles pulam
+            for (IndiceMap cod : instructionPointer) {    //Label e a linha que ela ta 
+                if (label.getLabel().equals(cod.getLabel())) {
+                    vm.editJmpValue(cod.getLinha(), label.getLinha() + 1);
                     break;
                 }
             }
         }
     }
-    
-    private void populateTable(int i, String[] splitted){
-        switch (splitted.length){
+
+    private void populateTable(int i, String[] splitted) {
+        switch (splitted.length) {
             case 1:
                 vm.addAsmRow(i, splitted[0]);
                 break;
             case 2:
-                try{
+                try {
                     vm.addAsmRow(i, splitted[0], Integer.parseInt(splitted[1]));
-                }catch(NumberFormatException e){
+                } catch (NumberFormatException e) {
                     //JMP X | JMPF X | CALL X | X NULL
-                    if(splitted[1].equals("NULL")){
+                    if (splitted[1].equals("NULL")) {
                         instructionPointer.add(new IndiceMap(i, splitted[0]));
                         vm.addAsmRow(i, "NULL");
-                    }else{
+                    } else {
                         completeLabel.add(new IndiceMap(i, splitted[1]));
                         vm.addAsmRow(i, splitted[0]);
                     }
@@ -84,21 +87,22 @@ public class ReaderAsm {
                 break;
         }
     }
-    
-    class IndiceMap{
-        
+
+    class IndiceMap {
+
         int linha;
         String label;
-        
-        IndiceMap(int linha, String label){
-           this.linha = linha;
-           this.label = label;
+
+        IndiceMap(int linha, String label) {
+            this.linha = linha;
+            this.label = label;
         }
-        
-        int getLinha(){
+
+        int getLinha() {
             return linha;
         }
-        String getLabel(){
+
+        String getLabel() {
             return label;
         }
     }
