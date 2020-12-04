@@ -1,6 +1,0 @@
-START
-RD
-RD
-ADD
-PRN
-HLT

@@ -19,6 +19,8 @@ class TabelaTokens:
             "booleano" : "sbooleano",
             "identificador" : "sidentificador",
             "numero" : "snumero",
+            "verdadeiro" : "sverdadeiro",
+            "falso" : "sfalso",
             "." : "sponto",
             ";" : "sponto_vírgula",
             "," : "svírgula",
