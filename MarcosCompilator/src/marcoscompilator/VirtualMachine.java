@@ -124,6 +124,22 @@ public class VirtualMachine extends javax.swing.JFrame {
         }
     }
     
+    private void clearInterface(){
+        //Clear local variables
+        temporario = "";
+        terminal = "";
+        //Clear terminal
+        textTerminal.selectAll();
+        textTerminal.replaceSelection("");
+        textTerminal.setText(null);
+        //Clear Stack
+        if (modelStack.getRowCount() > 0) {
+            for (int i = modelStack.getRowCount() - 1; i > -1; i--) {
+                modelStack.removeRow(i);
+            }
+        }
+    }
+    
         public void setTableCom(String str, int line){
         modelTableInstrucoes.setValueAt(str, line, 4);
     }
@@ -136,7 +152,6 @@ public class VirtualMachine extends javax.swing.JFrame {
         try{
         return Integer.parseInt(tableInstrucoes.getValueAt(line, 2).toString());
         }catch(NumberFormatException e){
-            //System.out.println("Nao tem param 1");
             return 0;
         }
     }
@@ -177,6 +192,7 @@ public class VirtualMachine extends javax.swing.JFrame {
     }
     
     public void endExecution(){
+        executando = false;
         if(terminal == null){
             terminal = "Execução encerrada!";
             textTerminal.setText(terminal);
@@ -471,10 +487,11 @@ public class VirtualMachine extends javax.swing.JFrame {
             @Override
             public void stateChanged(ChangeEvent arg0) {
                 if(!executando){
+                    clearInterface();
                     System.out.println("Iniciando execucao");
                     executando = true;
                     isDebug = false;
-                    interfaceVmCodigo.setIsRun(true);
+                    interfaceVmCodigo.setIsRun(true);                   
                     runCode(isDebug);
                 }
             }
@@ -523,7 +540,7 @@ public class VirtualMachine extends javax.swing.JFrame {
         );
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
+    
     private String differenceString(String str1, String str2){
         if(str1 == null)
             return str2;

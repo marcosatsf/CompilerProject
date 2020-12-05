@@ -517,6 +517,6 @@ public class Instrucoes {
 
     //Random value interval [0,127]
     private static int randomMemValue() {
-        return (int) (Math.random() * (128 + 1));
+        return 0;
     }
 }

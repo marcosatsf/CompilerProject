@@ -77,6 +77,8 @@ public class InterfaceVmCodigo {
             
             if (instrucao.equals("HLT")) {
                 System.out.println("O programa chegou ao seu fim.");
+                m = new ArrayList<>();
+                i = 0;
                 vm.endExecution();
                 break;
             }  
