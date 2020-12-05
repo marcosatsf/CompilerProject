@@ -12,6 +12,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
@@ -140,7 +141,16 @@ public class VirtualMachine extends javax.swing.JFrame {
         }
     }
     
-        public void setTableCom(String str, int line){
+    private void clearCode(){
+        textTerminal.setText("");
+        if (modelTableInstrucoes.getRowCount() > 0) {
+            for (int i = modelTableInstrucoes.getRowCount() - 1; i > -1; i--) {
+                modelTableInstrucoes.removeRow(i);
+            }
+        }
+    }
+    
+    public void setTableCom(String str, int line){
         modelTableInstrucoes.setValueAt(str, line, 4);
     }
     
@@ -470,12 +480,14 @@ public class VirtualMachine extends javax.swing.JFrame {
         );
 
         mArquivo.setText("Arquivo");
-        /*mArquivo.addChangeListener(new ChangeListener(){
-           @Override
-           public void stateChanged(ChangeEvent arg0) {
-           
-           }
-        });*/
+        mArquivo.addMouseListener(new MouseAdapter(){
+            public void mouseClicked(MouseEvent evt){
+                System.out.println("Abrir novo");
+                clearCode();
+                MainIDE.getInstance().loadCode();
+            }
+        });
+        
         menu.add(mArquivo);
         
         mEditar.setText("Editar");
@@ -483,9 +495,8 @@ public class VirtualMachine extends javax.swing.JFrame {
 
         mExecutar.setText("Executar");
         
-        mExecutar.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent arg0) {
+        mExecutar.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent evt) {
                 if(!executando){
                     clearInterface();
                     System.out.println("Iniciando execucao");
@@ -500,9 +511,8 @@ public class VirtualMachine extends javax.swing.JFrame {
 
         mDebug.setText("Debug");
         
-        mDebug.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent ce){
+        mDebug.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent ce){
                 if(!executando){
                     System.out.println("Iniciando execucao debug");
                     executando = true;
