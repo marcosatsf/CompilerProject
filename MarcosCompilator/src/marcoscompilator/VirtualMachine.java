@@ -67,6 +67,7 @@ public class VirtualMachine extends javax.swing.JFrame {
     
     public void setI(int i){
         this.i = i;
+        modelTableInstrucoes.fireTableDataChanged();
     }
     
     public static VirtualMachine getInstance(){
