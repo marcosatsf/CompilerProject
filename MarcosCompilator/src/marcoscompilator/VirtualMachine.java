@@ -61,8 +61,13 @@ public class VirtualMachine extends javax.swing.JFrame {
     String terminal;
     String temporario;
     boolean executando, isDebug, isBreakPoint;
+    int i = -1;
     
     private static VirtualMachine instance = null;
+    
+    public void setI(int i){
+        this.i = i;
+    }
     
     public static VirtualMachine getInstance(){
         if(instance == null) instance = new VirtualMachine();
@@ -702,7 +707,8 @@ public class VirtualMachine extends javax.swing.JFrame {
 
         // escolhe a cor a partir da linha
         private Color getCor(int linha, boolean selecionada) {
-
+            if(isDebug && linha == i)
+                return Color.GREEN;
             // linhas selecionadas são azuis
             if (selecionada && !executando) {
                 if(breakPoints.contains(linha)){

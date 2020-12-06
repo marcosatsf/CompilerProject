@@ -39,6 +39,7 @@ public class InterfaceVmCodigo {
                     if(breakPoints.contains(i)){
                         isRun = false;
                         vm.updateStack(m);
+                        vm.setI(i);
                         System.out.println("Breikei");
                         break;
                     }
@@ -83,8 +84,10 @@ public class InterfaceVmCodigo {
                 break;
             }  
             
-            if(!isRun)
-                break;   
+            if(!isRun){
+                vm.setI(i);
+                break; 
+            }
         }
     }
 
