@@ -420,7 +420,7 @@ public class VirtualMachine extends javax.swing.JFrame {
                     terminal = terminal + temporario;
                     //textTerminal.setText(terminal);
                     
-                    if(temporario.matches("[0-9]+")){
+                    if(temporario.matches("-?[0-9]+")){
                         valorLido = temporario;
                         temporario = "";
                         returnValueRead(isDebug);
