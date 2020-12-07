@@ -1,8 +1,7 @@
-#from app import Application
-from compilerIDE import Application
 from tkinter import *
 from tkinter import filedialog
-import os
+
+from compilerIDE import Application
 
 root = Tk()
 root.title("Compilador - IDE LPD")

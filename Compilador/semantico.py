@@ -99,7 +99,7 @@ class AnalisadorSemantico:
         Returns:
             bool : Se existe duplicidade ou não
         """
-        simbolo = self.semantico_tabela.checa_tabela(lexema)
+        simbolo = self.semantico_tabela.checa_tabela_reversed(lexema)
         #print(simbolo, self.escopo)
         try:
             if simbolo.get('tipo_iden') == "var" and \
@@ -118,7 +118,7 @@ class AnalisadorSemantico:
         # Na utilização de uma variável pesquisa se a
         # mesma foi declarada, se é uma variável e se está
         # visível no escopo.
-        simbolo = self.semantico_tabela.checa_tabela(lexema)
+        simbolo = self.semantico_tabela.checa_tabela_reversed(lexema)
         try:
             if simbolo.get('tipo_iden') == "var":
                 return simbolo["pos_pilha"]
@@ -131,7 +131,7 @@ class AnalisadorSemantico:
     def pesquisa_declvarfunc_tabela(self, lexema):
         # Verifica se um identificador é uma função ou uma
         # variável e se está visível no escopo de utilização.
-        simbolo = self.semantico_tabela.checa_tabela(lexema)
+        simbolo = self.semantico_tabela.checa_tabela_reversed(lexema)
         try:
             if simbolo.get('tipo_iden') in ["func_i", "func_b", "var"]:
                 return simbolo
@@ -144,7 +144,7 @@ class AnalisadorSemantico:
     def pesquisa_declvarprocfunc_tabela(self, lexema):
         # Verifica se um identificador é uma função ou uma
         # variável e se está visível no escopo de utilização.
-        simbolo = self.semantico_tabela.checa_tabela(lexema)
+        simbolo = self.semantico_tabela.checa_tabela_reversed(lexema)
         try:
             if simbolo.get('tipo_iden') == "proc":
                 return "proc", None, None
@@ -163,7 +163,7 @@ class AnalisadorSemantico:
         # procedimento.
         # Verifica se há duplicidade na declaração de uma
         # função.
-        simbolo = self.semantico_tabela.checa_tabela(lexema)
+        simbolo = self.semantico_tabela.checa_tabela_reversed(lexema)
         try:
             if isinstance(simbolo, dict):
             #if simbolo.get('tipo_iden') == "proc":
@@ -183,7 +183,7 @@ class AnalisadorSemantico:
         Returns:
             dict: estrutura do lexema pesquisado
         """
-        return self.semantico_tabela.checa_tabela(lexema)
+        return self.semantico_tabela.checa_tabela_reversed(lexema)
 
 
     def print_table(self):
@@ -213,7 +213,7 @@ class AnalisadorSemantico:
         struct = self.expressao['struct'].pop()
         self.expressao['str'] = self.expressao['str'].removesuffix(struct['lexema'])
 
-        self.expressao['struct_pos'] = {elem['lexema']:self.semantico_tabela.checa_tabela(elem['lexema']) for elem in self.expressao['struct'] if self.semantico_tabela.checa_tabela(elem['lexema'])}
+        self.expressao['struct_pos'] = {elem['lexema']:self.semantico_tabela.checa_tabela_reversed(elem['lexema']) for elem in self.expressao['struct'] if self.semantico_tabela.checa_tabela_reversed(elem['lexema'])}
         #print(self.expressao,end='\n\n')
 
         # armazena os tipos (inteiro ou booleano)

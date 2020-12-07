@@ -1,10 +1,8 @@
-
-from erros import Erro
-
 from reader import Reader
 from lexico import AnalisadorLexico
 from semantico import AnalisadorSemantico
 from geracao_codigo import GeracaoCodigo
+from erros import Erro
 
 class AnalisadorSintatico:
     def __init__(self, file_string, file_name):
@@ -21,8 +19,6 @@ class AnalisadorSintatico:
 
     def run_analyzer(self):
         try:
-            # Instancia o analisador com o programa já formatado
-            #print(self.texto.get_programa_formatted())
             self.lexico = AnalisadorLexico(self.texto.get_programa_formatted())    
             # Realiza a quebra em tokens
             self.lexico.pega_token()
@@ -37,14 +33,6 @@ class AnalisadorSintatico:
             return "Compilado com sucesso!"
         except Exception as err:
             return err
-
-
-    # def raise_error_exp_got(self, exp, got, line):
-    #     return f"Esperado {exp}, encontrado \'{got}\' na linha {line}!"
-
-
-    # def raise_error_texto(self, texto, line):
-    #     return f"{texto} na linha {line}!"
 
 
     def __get_next_token(self):
@@ -273,6 +261,7 @@ class AnalisadorSintatico:
                         if simbolo.get("tipo_iden") == 'var':
                             self.g_codigo.traduz(instrucao="LDV", arg1=simbolo.get("pos_pilha"))
                         else:
+                            self.g_codigo.traduz(instrucao="CALL", arg1=simbolo["rotulo"])
                             self.g_codigo.traduz(instrucao="LDV", arg1=0)
                         self.g_codigo.traduz(instrucao="PRN")
 
@@ -422,8 +411,6 @@ class AnalisadorSintatico:
                         # GERA CÓDIGO
                         self.g_codigo.traduz(rotulo=self.g_codigo.get_rotulo(), instrucao="NULL")
                         self.g_codigo.inc_rotulo()
-                        #self.g_codigo.push_jmp(self.g_codigo.get_rotulo(), info_guardado)
-                        #self.g_codigo.inc_rotulo()
 
                         self.semantico.ramifica_escopo()
 
@@ -435,10 +422,8 @@ class AnalisadorSintatico:
                             if not ret_func.get('retorno_valido'):
                                 # ERRO SEMANTICO
                                 raise AttributeError(Erro.raise_error_texto(f"Pode não haver retorno da função \"{ret_func.get('lexema')}\", verifique todos os caminhos!"))
-                            # GERAÇÃO CÓDIGO
-                            #self.g_codigo.traduz(rotulo=self.g_codigo.pop_jmp(info_guardado) ,instrucao="NULL")                
+                            # GERAÇÃO CÓDIGO           
                             self.g_codigo.desaloc_mem(info_guardado)
-                            #self.g_codigo.traduz(instrucao="RETURN")
                     else:
                         # ERRO
                         raise AttributeError(Erro.raise_error_exp_got('inteiro ou booleano',self.token_lido.get('lexema'),self.token_lido.get('linha')))

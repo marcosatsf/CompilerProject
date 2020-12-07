@@ -1,3 +1,5 @@
+# Código inutilizável, GUI antiga
+
 from reader import Reader
 from sintatico import AnalisadorSintatico
 from tkinter import *
@@ -75,24 +77,8 @@ class Application:
         analisador = AnalisadorSintatico(self.nomeLabel["text"])
 
         message = analisador.run_analyzer()
-        # try:
-        #     analisador.run_analyzer()
-
-        #     analisador.pega_token()
-        #     write_output = analisador.get_tokenizer_str()
-        #     message = "Output gerado com sucesso!"
-        # except AttributeError as e:
-        #     write_output = analisador.get_tokenizer_str(str(e))
-        #     message = f"Output gerado com {repr(e)}"
-        # Mostra os tokens
-        #analisador.beauty_print()
-        # get_path = self.nomeLabel["text"].rsplit('/', 1)[0]
-        # with open(f'{get_path}/output.txt', 'w') as writer:
-        #     writer.write(write_output)
         self.tokenizado["text"] = message
         c_time = datetime.datetime.now() 
         # print para amostragem da ultima vez processado!
         self.last_time["text"] = f"Última vez processado: {c_time.day:02d}/{c_time.month:02d}/{c_time.year:04d} - {c_time.hour:02d}h{c_time.minute:02d}"
-        # self.master.update_idletasks()
-        # time.sleep(5)
-        # self.tokenizado["text"] = "Pronto para processar..."
+

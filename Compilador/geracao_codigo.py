@@ -31,6 +31,8 @@ class GeracaoCodigo:
         Args:
             file_name (str): nome do arquivo que estamos editando
         """
+        if file_name == "Arquivo não salvo":
+            file_name = "compilado_lpd"
         file_name = file_name.split('.')[0]
         with open(f'{file_name}.asm', 'w') as f:
             for elem in self.txt_maquina:
@@ -211,7 +213,8 @@ class GeracaoCodigo:
         """
         if len(self.alloc) > 0:
             if self.alloc[-1]['lexema'] == info[0] and self.alloc[-1]['tipo'] == info[1]:
-                self.alloc.pop()
+                struct = self.alloc.pop()
+                self.base_alloc -= struct['quantidade']
 
 
     def aloca_mem_inicio(self):
